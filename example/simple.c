@@ -24,12 +24,14 @@ main(int32_t argc, char const * const argv[])
     // null-terminate the string
     string[length] = '\0';
     
-    // generate a result
-    char result[64];
-    
-    lxt_gen(result, sizeof(result), string);
-    
-    printf("%s\n", result);
+    for (int32_t i = 0; i < 5; i++) {
+        // generate a result
+        char result[64];
+        
+        lxt_gen(result, sizeof(result), string);
+        
+        printf("%s\n", result);
+    }
     
     // clean up
     fclose(file);
