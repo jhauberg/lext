@@ -1,0 +1,6 @@
+a (Earth, Wind, Water, Fire)
+b (Axe, Sword)
+c (Frozen, Fiery)
+
+common <@b of @a>
+magic <@c @common>
