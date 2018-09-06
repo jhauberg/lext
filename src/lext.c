@@ -44,11 +44,17 @@ struct lxt_pattern {
     size_t generator_count;
 };
 
+struct lxt_cursor {
+    char * buffer;
+    size_t offset;
+    size_t length;
+};
+
 static int32_t lxt_parse(struct lxt_pattern *, char const * pattern);
 static char const * lxt_parse_next(struct lxt_token *, enum lxt_kind *, char const * pattern);
-static int32_t lxt_resolve_generator(char * buffer, size_t length, size_t * offset, struct lxt_generator const *, struct lxt_pattern const *);
-static int32_t lxt_resolve_variable(char * buffer, size_t length, size_t * offset, struct lxt_token const * variable, struct lxt_pattern const *);
-static int32_t lxt_resolve_container(char * buffer, size_t length, size_t * offset, struct lxt_container const *);
+static int32_t lxt_resolve_generator(struct lxt_cursor *, struct lxt_generator const *, struct lxt_pattern const *);
+static int32_t lxt_resolve_variable(struct lxt_cursor *, struct lxt_token const * variable, struct lxt_pattern const *);
+static int32_t lxt_resolve_container(struct lxt_cursor *, struct lxt_container const *);
 
 static struct lxt_generator const * lxt_find_generator(struct lxt_token const *, struct lxt_pattern const *);
 static struct lxt_container const * lxt_find_container(struct lxt_token const *, struct lxt_pattern const *);
@@ -102,35 +108,35 @@ lxt_genk(char * const result, size_t length, char const * pattern,
     
     memset(buffer, '\0', sizeof(buffer));
     
-    size_t len;
+    struct lxt_cursor cursor;
     
-    if (lxt_resolve_generator(buffer, length, &len, generator, &parsed) != 0) {
+    cursor.buffer = buffer;
+    cursor.length = length;
+    cursor.offset = 0;
+    
+    if (lxt_resolve_generator(&cursor, generator, &parsed) != 0) {
         return;
     }
     
-    memcpy(result, buffer, len);
+    memcpy(result, buffer, cursor.offset);
 }
 
 static
 int32_t
-lxt_resolve_container(char * const buffer,
-                       size_t const length,
-                       size_t * offset,
-                       struct lxt_container const * const container)
+lxt_resolve_container(struct lxt_cursor * const cursor,
+                      struct lxt_container const * const container)
 {
-    *offset = 0;
-    
     size_t const random_index = rand() % container->entry_count;
     
     struct lxt_token const * entry = &container->entries[random_index];
     
-    if (entry->length >= length) {
+    if (entry->length >= cursor->length - cursor->offset) {
         return -1;
     }
     
-    *offset = entry->length;
+    cursor->offset += entry->length;
     
-    memcpy(buffer, entry->start, entry->length);
+    memcpy(cursor->buffer, entry->start, entry->length);
     
     return 0;
 }
@@ -186,25 +192,25 @@ lxt_find_container(struct lxt_token const * const token,
 
 static
 int32_t
-lxt_resolve_variable(char * const buffer,
-                      size_t const length,
-                      size_t * offset,
-                      struct lxt_token const * const variable,
-                      struct lxt_pattern const * const pattern)
+lxt_resolve_variable(struct lxt_cursor * const cursor,
+                     struct lxt_token const * const variable,
+                     struct lxt_pattern const * const pattern)
 {
-    struct lxt_generator const * const generator = lxt_find_generator(variable, pattern);
+    struct lxt_generator const * const generator = lxt_find_generator(variable,
+                                                                      pattern);
     
     if (generator != NULL) {
-        return lxt_resolve_generator(buffer, length, offset, generator, pattern);
+        return lxt_resolve_generator(cursor, generator, pattern);
     }
 
-    struct lxt_container const * const container = lxt_find_container(variable, pattern);
+    struct lxt_container const * const container = lxt_find_container(variable,
+                                                                      pattern);
     
     if (container == NULL) {
         return -1;
     }
     
-    if (lxt_resolve_container(buffer, length, offset, container) != 0) {
+    if (lxt_resolve_container(cursor, container) != 0) {
         return -1;
     }
     
@@ -213,19 +219,15 @@ lxt_resolve_variable(char * const buffer,
 
 static
 int32_t
-lxt_resolve_generator(char * const buffer,
-                       size_t const length,
-                       size_t * offset,
-                       struct lxt_generator const * const generator,
-                       struct lxt_pattern const * const pattern)
+lxt_resolve_generator(struct lxt_cursor * const cursor,
+                      struct lxt_generator const * const generator,
+                      struct lxt_pattern const * const pattern)
 {
-    *offset = 0;
-    
     size_t n = 0; // constraint to stay within substring length
     
     char const * p = generator->resolution.start;
     
-    struct lxt_token variable; // just the current variable, if any
+    struct lxt_token variable;
     
     bool token_started = false;
     bool token_ended = false;
@@ -263,28 +265,26 @@ lxt_resolve_generator(char * const buffer,
         if (token_ended) {
             token_ended = false;
             
-            size_t len;
-            size_t remaining_length = length - *offset;
+            struct lxt_cursor tmp;
             
-            if (lxt_resolve_variable(buffer + *offset,
-                                      remaining_length,
-                                      &len,
-                                      &variable,
-                                      pattern) != 0) {
+            tmp.buffer = cursor->buffer + cursor->offset;
+            tmp.length = cursor->length - cursor->offset;
+            tmp.offset = 0;
+            
+            if (lxt_resolve_variable(&tmp, &variable, pattern) != 0) {
                 return -1;
             }
             
-            *offset += len;
+            cursor->offset += tmp.offset;
         }
         
         if (!token_started && !token_ended) {
-            if (*offset >= length) {
+            if (cursor->offset >= cursor->length) {
                 return -1;
             }
             
-            buffer[*offset] = *p;
-            
-            *offset += 1;
+            cursor->buffer[cursor->offset] = *p;
+            cursor->offset += 1;
         }
         
         p++;
@@ -292,18 +292,17 @@ lxt_resolve_generator(char * const buffer,
     }
     
     if (token_started && !token_ended) {
-        size_t len;
-        size_t remaining_length = length - *offset;
+        struct lxt_cursor tmp;
         
-        if (lxt_resolve_variable(buffer + *offset,
-                                  remaining_length,
-                                  &len,
-                                  &variable,
-                                  pattern) != 0) {
+        tmp.buffer = cursor->buffer + cursor->offset;
+        tmp.length = cursor->length - cursor->offset;
+        tmp.offset = 0;
+        
+        if (lxt_resolve_variable(&tmp, &variable, pattern) != 0) {
             return -1;
         }
         
-        *offset += len;
+        cursor->offset += tmp.offset;
     }
     
     return 0;
@@ -312,8 +311,8 @@ lxt_resolve_generator(char * const buffer,
 static
 char const *
 lxt_parse_next(struct lxt_token * const token,
-                enum lxt_kind * const kind,
-                char const * pattern)
+               enum lxt_kind * const kind,
+               char const * pattern)
 {
     *kind = LXT_KIND_NONE;
     
