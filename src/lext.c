@@ -68,7 +68,7 @@ lxt_gen(char * const result, size_t length, char const * pattern)
 }
 
 void
-lxt_genk(char * const result, size_t length, char const * pattern,
+lxt_genk(char * const result, size_t length, char const * const pattern,
           char const * name)
 {
     if (length == 0) {
@@ -111,14 +111,17 @@ lxt_genk(char * const result, size_t length, char const * pattern,
     struct lxt_cursor cursor;
     
     cursor.buffer = buffer;
-    cursor.length = length;
+    cursor.length = length - 1; // leave 1 byte for the null-terminator
     cursor.offset = 0;
     
     if (lxt_resolve_generator(&cursor, generator, &parsed) != 0) {
         return;
     }
     
+    // copy generated characters into resulting buffer
     memcpy(result, buffer, cursor.offset);
+    // null-terminate the resulting buffer
+    memset(result + cursor.offset, '\0', 1);
 }
 
 static
