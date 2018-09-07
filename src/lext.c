@@ -17,7 +17,7 @@ enum lxt_kind {
     LXT_KIND_CONTAINER,
     LXT_KIND_CONTAINER_ENTRY,
     LXT_KIND_GENERATOR,
-    LXT_KIND_RESOLUTION
+    LXT_KIND_SEQUENCE
 };
 
 struct lxt_token {
@@ -33,7 +33,7 @@ struct lxt_container {
 
 struct lxt_generator {
     struct lxt_token entry;
-    struct lxt_token resolution;
+    struct lxt_token sequence;
 };
 
 struct lxt_template {
@@ -72,8 +72,8 @@ static int32_t lxt_append_container_entry(struct lxt_template *,
                                           struct lxt_token);
 static int32_t lxt_append_generator(struct lxt_template *,
                                     struct lxt_token);
-static int32_t lxt_append_resolution(struct lxt_template *,
-                                     struct lxt_token);
+static int32_t lxt_append_sequence(struct lxt_template *,
+                                   struct lxt_token);
 
 static int32_t lxt_resolve_generator(struct lxt_cursor *,
                                      struct lxt_generator const *,
@@ -232,7 +232,7 @@ lxt_parse_next(struct lxt_token * const token,
             } break;
                 
             case '>': {
-                *kind = LXT_KIND_RESOLUTION;
+                *kind = LXT_KIND_SEQUENCE;
             } break;
                 
             default:
@@ -292,8 +292,8 @@ lxt_handle_token(struct lxt_template * const template,
             }
         } break;
             
-        case LXT_KIND_RESOLUTION: {
-            if (lxt_append_resolution(template, token) != 0) {
+        case LXT_KIND_SEQUENCE: {
+            if (lxt_append_sequence(template, token) != 0) {
                 return -1;
             }
         } break;
@@ -370,8 +370,8 @@ lxt_append_generator(struct lxt_template * const template,
 
 static
 int32_t
-lxt_append_resolution(struct lxt_template * const template,
-                      struct lxt_token const token)
+lxt_append_sequence(struct lxt_template * const template,
+                    struct lxt_token const token)
 {
     if (template->container_count == 0) {
         return -1;
@@ -381,7 +381,7 @@ lxt_append_resolution(struct lxt_template * const template,
     
     struct lxt_generator * const generator = &template->generators[cur_index];
     
-    generator->resolution = token;
+    generator->sequence = token;
     
     return 0;
 }
@@ -394,14 +394,14 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
 {
     size_t n = 0; // constraint to stay within substring length
     
-    char const * p = generator->resolution.start;
+    char const * p = generator->sequence.start;
     
     struct lxt_token variable;
     
     bool token_started = false;
     bool token_ended = false;
     
-    while (*p && n != generator->resolution.length) {
+    while (*p && n != generator->sequence.length) {
         if (strncmp(p, "@", 1) == 0) {
             if (token_started) {
                 return -1;
