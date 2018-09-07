@@ -396,7 +396,10 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
     
     char const * p = generator->sequence.start;
     
-    struct lxt_token variable;
+    struct lxt_token variable = {
+        .start = NULL,
+        .length = 0
+    };
     
     bool token_started = false;
     bool token_ended = false;
