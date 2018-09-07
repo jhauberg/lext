@@ -69,7 +69,7 @@ letter (a, b, c, d)
 
 ### Generators
 
-A generator defines the format and *sequence* of a generated output.
+A generator defines the *format* and *sequence* of a generated output.
 
 In this example, a generator `scramble` is defined. This generator then defines a sequence of 3 variables, each pointing to a *container* named `letter`:
 
@@ -77,7 +77,7 @@ In this example, a generator `scramble` is defined. This generator then defines 
 scramble <@letter, @letter, @letter>
 ```
 
-When this generator is invoked and a result is to be sequenced, each variable will be replaced by a randomly picked item from the `letters` container. For instance, one result could be `c, a, b`, but another could just as well be `a, b, c`.
+When this generator is invoked and a result is to be sequenced, each variable will be replaced by a randomly picked item from the `letter` container. For instance, one result could be `c, a, b`, but another could just as well be `a, b, c`.
 
 #### Sequences
 
