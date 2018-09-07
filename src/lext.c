@@ -199,11 +199,23 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
                      struct lxt_token const * const variable,
                      struct lxt_pattern const * const pattern)
 {
+    struct lxt_cursor tmp;
+    
+    tmp.buffer = cursor->buffer + cursor->offset;
+    tmp.length = cursor->length - cursor->offset;
+    tmp.offset = 0;
+    
     struct lxt_generator const * const generator = lxt_find_generator(variable,
                                                                       pattern);
     
     if (generator != NULL) {
-        return lxt_resolve_generator(cursor, generator, pattern);
+        if (lxt_resolve_generator(&tmp, generator, pattern) != 0) {
+            return -1;
+        }
+        
+        cursor->offset += tmp.offset;
+        
+        return 0;
     }
 
     struct lxt_container const * const container = lxt_find_container(variable,
@@ -213,9 +225,11 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
         return -1;
     }
     
-    if (lxt_resolve_container(cursor, container) != 0) {
+    if (lxt_resolve_container(&tmp, container) != 0) {
         return -1;
     }
+    
+    cursor->offset += tmp.offset;
     
     return 0;
 }
@@ -268,17 +282,9 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         if (token_ended) {
             token_ended = false;
             
-            struct lxt_cursor tmp;
-            
-            tmp.buffer = cursor->buffer + cursor->offset;
-            tmp.length = cursor->length - cursor->offset;
-            tmp.offset = 0;
-            
-            if (lxt_resolve_variable(&tmp, &variable, pattern) != 0) {
+            if (lxt_resolve_variable(cursor, &variable, pattern) != 0) {
                 return -1;
             }
-            
-            cursor->offset += tmp.offset;
         }
         
         if (!token_started && !token_ended) {
@@ -295,17 +301,9 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
     }
     
     if (token_started && !token_ended) {
-        struct lxt_cursor tmp;
-        
-        tmp.buffer = cursor->buffer + cursor->offset;
-        tmp.length = cursor->length - cursor->offset;
-        tmp.offset = 0;
-        
-        if (lxt_resolve_variable(&tmp, &variable, pattern) != 0) {
+        if (lxt_resolve_variable(cursor, &variable, pattern) != 0) {
             return -1;
         }
-        
-        cursor->offset += tmp.offset;
     }
     
     return 0;
