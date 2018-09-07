@@ -6,7 +6,7 @@
 #include <stdlib.h> // malloc, free
 
 int32_t
-main(int32_t argc, char const * const argv[])
+main(void)
 {
     FILE * const file = fopen("simple.lxt", "rb");
 
