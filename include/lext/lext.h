@@ -1,6 +1,11 @@
 #pragma once
 
 #include <stddef.h> // size_t
+#include <stdint.h> // uint32_t
 
-void lxt_gen(char * result, size_t length, char const * pattern);
-void lxt_genk(char * result, size_t length, char const * pattern, char const * name);
+struct lxt_opts {
+    char const * generator;
+    uint32_t * seed;
+};
+
+void lxt_gen(char * result, size_t length, char const * pattern, struct lxt_opts);

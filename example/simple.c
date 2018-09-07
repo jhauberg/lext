@@ -24,11 +24,16 @@ main(int32_t argc, char const * const argv[])
     // null-terminate the string
     string[length] = '\0';
     
+    uint32_t seed = 2147483647;
+    
     for (int32_t i = 0; i < 5; i++) {
         // generate a result
         char result[64];
         
-        lxt_gen(result, sizeof(result), string);
+        lxt_gen(result, sizeof(result), string, (struct lxt_opts) {
+            .generator = NULL,
+            .seed = &seed
+        });
         
         printf("%s\n", result);
     }
