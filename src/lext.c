@@ -62,6 +62,19 @@ static char const * lxt_parse_next(struct lxt_token *,
                                    enum lxt_kind *,
                                    char const * pattern);
 
+static int32_t lxt_handle_token(struct lxt_template *,
+                                struct lxt_token,
+                                enum lxt_kind);
+
+static int32_t lxt_append_container(struct lxt_template *,
+                                    struct lxt_token);
+static int32_t lxt_append_container_entry(struct lxt_template *,
+                                          struct lxt_token);
+static int32_t lxt_append_generator(struct lxt_template *,
+                                    struct lxt_token);
+static int32_t lxt_append_resolution(struct lxt_template *,
+                                     struct lxt_token);
+
 static int32_t lxt_resolve_generator(struct lxt_cursor *,
                                      struct lxt_generator const *,
                                      struct lxt_template const *);
@@ -69,8 +82,8 @@ static int32_t lxt_resolve_variable(struct lxt_cursor *,
                                     struct lxt_token const *,
                                     struct lxt_template const *);
 
-static int32_t lxt_append_entry(struct lxt_cursor *,
-                                struct lxt_token const *);
+static int32_t lxt_write_entry(struct lxt_cursor *,
+                               struct lxt_token const *);
 
 static bool lxt_find_generator(struct lxt_generator const **,
                                struct lxt_token const *,
@@ -170,17 +183,10 @@ lxt_get_generator(struct lxt_generator const ** generator,
 
 static
 int32_t
-lxt_parse(struct lxt_template * const result,
+lxt_parse(struct lxt_template * const template,
           char const * pattern)
 {
-    struct lxt_container * container = NULL;
-    struct lxt_generator * generator = NULL;
-    
     while (*pattern) {
-        if (result->container_count >= MAX_CONTAINERS) {
-            return -1;
-        }
-        
         struct lxt_token token;
         enum lxt_kind kind;
         
@@ -190,47 +196,8 @@ lxt_parse(struct lxt_template * const result,
             continue;
         }
         
-        switch (kind) {
-            case LXT_KIND_CONTAINER: {
-                if (result->container_count == MAX_CONTAINERS) {
-                    return -1;
-                }
-                
-                container = &result->containers[result->container_count++];
-                container->entry = token;
-            } break;
-                
-            case LXT_KIND_CONTAINER_ENTRY: {
-                if (container == NULL) {
-                    return -1;
-                }
-                
-                if (container->entry_count == MAX_CONTAINER_ENTRIES) {
-                    return -1;
-                }
-                
-                container->entries[container->entry_count++] = token;
-            } break;
-                
-            case LXT_KIND_GENERATOR: {
-                if (result->generator_count == MAX_GENERATORS) {
-                    return -1;
-                }
-                
-                generator = &result->generators[result->generator_count++];
-                generator->entry = token;
-            } break;
-                
-            case LXT_KIND_RESOLUTION: {
-                if (generator == NULL) {
-                    return -1;
-                }
-                
-                generator->resolution = token;
-            } break;
-                
-            case LXT_KIND_NONE:
-                break;
+        if (lxt_handle_token(template, token, kind) != 0) {
+            return -1;
         }
     }
     
@@ -298,6 +265,125 @@ lxt_parse_next(struct lxt_token * const token,
     }
     
     return pattern;
+}
+
+static
+int32_t
+lxt_handle_token(struct lxt_template * const template,
+                 struct lxt_token const token,
+                 enum lxt_kind const kind)
+{
+    switch (kind) {
+        case LXT_KIND_CONTAINER: {
+            if (lxt_append_container(template, token) != 0) {
+                return -1;
+            }
+        } break;
+            
+        case LXT_KIND_CONTAINER_ENTRY: {
+            if (lxt_append_container_entry(template, token) != 0) {
+                return -1;
+            }
+        } break;
+            
+        case LXT_KIND_GENERATOR: {
+            if (lxt_append_generator(template, token) != 0) {
+                return -1;
+            }
+        } break;
+            
+        case LXT_KIND_RESOLUTION: {
+            if (lxt_append_resolution(template, token) != 0) {
+                return -1;
+            }
+        } break;
+            
+        case LXT_KIND_NONE:
+            break;
+    }
+    
+    return 0;
+}
+
+static
+int32_t
+lxt_append_container(struct lxt_template * const template,
+                     struct lxt_token const token)
+{
+    if (template->container_count == MAX_CONTAINERS) {
+        return -1;
+    }
+    
+    size_t const cur_index = template->container_count;
+    
+    struct lxt_container * const container = &template->containers[cur_index];
+    
+    container->entry = token;
+    
+    template->container_count += 1;
+    
+    return 0;
+}
+
+static
+int32_t
+lxt_append_container_entry(struct lxt_template * const template,
+                           struct lxt_token const token)
+{
+    if (template->container_count == 0) {
+        return -1;
+    }
+    
+    size_t const cur_index = template->container_count - 1;
+    
+    struct lxt_container * const container = &template->containers[cur_index];
+    
+    if (container->entry_count == MAX_CONTAINER_ENTRIES) {
+        return -1;
+    }
+    
+    container->entries[container->entry_count] = token;
+    container->entry_count += 1;
+    
+    return 0;
+}
+
+static
+int32_t
+lxt_append_generator(struct lxt_template * const template,
+                     struct lxt_token const token)
+{
+    if (template->generator_count == MAX_GENERATORS) {
+        return -1;
+    }
+    
+    size_t const cur_index = template->generator_count;
+    
+    struct lxt_generator * const generator = &template->generators[cur_index];
+    
+    generator->entry = token;
+    
+    template->generator_count += 1;
+    
+    return 0;
+}
+
+static
+int32_t
+lxt_append_resolution(struct lxt_template * const template,
+                      struct lxt_token const token)
+{
+    if (template->container_count == 0) {
+        return -1;
+    }
+    
+    size_t const cur_index = template->generator_count - 1;
+    
+    struct lxt_generator * const generator = &template->generators[cur_index];
+    
+    generator->resolution = token;
+    
+    return 0;
 }
 
 static
@@ -409,7 +495,7 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
     
     struct lxt_token const * entry = &container->entries[i];
     
-    if (lxt_append_entry(&tmp, entry) != 0) {
+    if (lxt_write_entry(&tmp, entry) != 0) {
         return -1;
     }
     
@@ -420,8 +506,8 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
 
 static
 int32_t
-lxt_append_entry(struct lxt_cursor * const cursor,
-                 struct lxt_token const * entry)
+lxt_write_entry(struct lxt_cursor * const cursor,
+                struct lxt_token const * const entry)
 {
     if (entry->length >= cursor->length - cursor->offset) {
         return -1;

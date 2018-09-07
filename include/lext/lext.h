@@ -8,4 +8,7 @@ struct lxt_opts {
     uint32_t * seed;
 };
 
-void lxt_gen(char * result, size_t length, char const * pattern, struct lxt_opts);
+void lxt_gen(char * result,
+             size_t length,
+             char const * pattern,
+             struct lxt_opts);
