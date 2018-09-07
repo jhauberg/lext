@@ -52,30 +52,43 @@ struct lxt_cursor {
 
 static uint32_t lxt_rand32(uint32_t * seed);
 
-static int32_t lxt_parse(struct lxt_template *, char const * pattern);
-static char const * lxt_parse_next(struct lxt_token *, enum lxt_kind *, char const * pattern);
+static void lxt_get_generator(struct lxt_generator const **,
+                              struct lxt_template const *,
+                              char const * name);
 
-static int32_t lxt_resolve_generator(struct lxt_cursor *, struct lxt_generator const *, struct lxt_template const *);
-static int32_t lxt_resolve_variable(struct lxt_cursor *, struct lxt_token const *, struct lxt_template const *);
+static int32_t lxt_parse(struct lxt_template *,
+                         char const * pattern);
+static char const * lxt_parse_next(struct lxt_token *,
+                                   enum lxt_kind *,
+                                   char const * pattern);
 
-static int32_t lxt_append_entry(struct lxt_cursor *, struct lxt_token const *);
+static int32_t lxt_resolve_generator(struct lxt_cursor *,
+                                     struct lxt_generator const *,
+                                     struct lxt_template const *);
+static int32_t lxt_resolve_variable(struct lxt_cursor *,
+                                    struct lxt_token const *,
+                                    struct lxt_template const *);
 
-static struct lxt_generator const * lxt_find_generator(struct lxt_token const *, struct lxt_template const *);
-static struct lxt_container const * lxt_find_container(struct lxt_token const *, struct lxt_template const *);
+static int32_t lxt_append_entry(struct lxt_cursor *,
+                                struct lxt_token const *);
 
-static bool lxt_token_equals(struct lxt_token const *, char const * name, size_t length);
+static bool lxt_find_generator(struct lxt_generator const **,
+                               struct lxt_token const *,
+                               struct lxt_template const *);
+static bool lxt_find_container(struct lxt_container const **,
+                               struct lxt_token const *,
+                               struct lxt_template const *);
+
+static bool lxt_token_equals(struct lxt_token const *,
+                             char const * name,
+                             size_t length);
 
 void
-lxt_gen(char * const result, size_t const length, char const * const pattern, struct lxt_opts const options)
+lxt_gen(char * const result,
+        size_t const length,
+        char const * const pattern,
+        struct lxt_opts options)
 {
-    if (length == 0 || result == NULL) {
-        return;
-    }
-    
-    if (pattern == NULL) {
-        return;
-    }
-    
     struct lxt_template template;
     
     memset(&template, 0, sizeof(template));
@@ -84,47 +97,32 @@ lxt_gen(char * const result, size_t const length, char const * const pattern, st
         return;
     }
     
+    uint32_t default_seed = 2147483647;
+    
+    template.seed = &default_seed;
+    
     if (options.seed != NULL) {
         template.seed = options.seed;
-    } else {
-        uint32_t seed = 2147483647;
-        
-        template.seed = &seed;
     }
     
     struct lxt_generator const * generator = NULL;
     
-    if (options.generator != NULL) {
-        struct lxt_token token;
-        
-        token.start = options.generator;
-        token.length = strlen(options.generator);
-        
-        generator = lxt_find_generator(&token, &template);
-    } else {
-        generator = &template.generators[lxt_rand32(template.seed) % template.generator_count];
-    }
+    lxt_get_generator(&generator, &template, options.generator);
     
     if (generator == NULL) {
         return;
     }
     
-    char buffer[length];
-    
-    memset(buffer, '\0', sizeof(buffer));
-    
     struct lxt_cursor cursor;
     
-    cursor.buffer = buffer;
+    cursor.buffer = result;
     cursor.length = length - 1; // leave 1 byte for the null-terminator
     cursor.offset = 0;
     
     if (lxt_resolve_generator(&cursor, generator, &template) != 0) {
-        return;
+        // something went wrong
     }
     
-    // copy generated characters into resulting buffer
-    memcpy(result, buffer, cursor.offset);
     // null-terminate the resulting buffer
     memset(result + cursor.offset, '\0', 1);
 }
@@ -145,70 +143,35 @@ lxt_rand32(uint32_t * const seed)
 }
 
 static
-char const *
-lxt_parse_next(struct lxt_token * const token,
-               enum lxt_kind * const kind,
-               char const * pattern)
+void
+lxt_get_generator(struct lxt_generator const ** generator,
+                  struct lxt_template const * const template,
+                  char const * const name)
 {
-    *kind = LXT_KIND_NONE;
-    
-    token->start = NULL;
-    token->length = 0;
-    
-    while (*pattern) {
-        switch (*pattern) {
-            case '(': {
-                *kind = LXT_KIND_CONTAINER;
-            } break;
-                
-            case ',':
-            case ')': {
-                *kind = LXT_KIND_CONTAINER_ENTRY;
-            } break;
-                
-            case '<': {
-                *kind = LXT_KIND_GENERATOR;
-            } break;
-                
-            case '>': {
-                *kind = LXT_KIND_RESOLUTION;
-            } break;
-                
-            default:
-                break;
-        }
-        
-        if (*kind != LXT_KIND_NONE) {
-            // skip trailing whitespace
-            char const * p = pattern - 1;
-            
-            while (isspace(*p)) {
-                token->length -= 1;
-                
-                p--;
-            }
-            
-            return pattern + 1;
-        }
-        
-        if (token->start == NULL && !isspace(*pattern)) {
-            // skip leading whitespace
-            token->start = pattern;
-        }
-        
-        if (token->start != NULL) {
-            token->length += 1;
-        }
-        
-        pattern++;
+    if (template->generator_count == 0) {
+        return;
     }
     
-    return pattern;
+    if (name != NULL) {
+        struct lxt_token token;
+        
+        token.start = name;
+        token.length = strlen(name);
+        
+        if (lxt_find_generator(generator, &token, template)) {
+            return;
+        }
+    }
+    
+    size_t const i = lxt_rand32(template->seed);
+    
+    *generator = &template->generators[i % template->generator_count];
 }
 
 static
 int32_t
-lxt_parse(struct lxt_template * const result, char const * pattern)
+lxt_parse(struct lxt_template * const result,
+          char const * pattern)
 {
     struct lxt_container * container = NULL;
     struct lxt_generator * generator = NULL;
@@ -267,13 +230,74 @@ lxt_parse(struct lxt_template * const result, char const * pattern)
             } break;
                 
             case LXT_KIND_NONE:
-                
-            default:
                 break;
         }
     }
     
     return 0;
+}
+
+static
+char const *
+lxt_parse_next(struct lxt_token * const token,
+               enum lxt_kind * const kind,
+               char const * pattern)
+{
+    *kind = LXT_KIND_NONE;
+    
+    token->start = NULL;
+    token->length = 0;
+    
+    while (*pattern) {
+        switch (*pattern) {
+            case '(': {
+                *kind = LXT_KIND_CONTAINER;
+            } break;
+                
+            case ',':
+                /* fall through */
+            case ')': {
+                *kind = LXT_KIND_CONTAINER_ENTRY;
+            } break;
+                
+            case '<': {
+                *kind = LXT_KIND_GENERATOR;
+            } break;
+                
+            case '>': {
+                *kind = LXT_KIND_RESOLUTION;
+            } break;
+                
+            default:
+                break;
+        }
+        
+        if (*kind != LXT_KIND_NONE) {
+            // skip trailing whitespace
+            char const * p = pattern - 1;
+            
+            while (isspace(*p)) {
+                token->length -= 1;
+                
+                p--;
+            }
+            
+            return pattern + 1;
+        }
+        
+        if (token->start == NULL && !isspace(*pattern)) {
+            // skip leading whitespace
+            token->start = pattern;
+        }
+        
+        if (token->start != NULL) {
+            token->length += 1;
+        }
+        
+        pattern++;
+    }
+    
+    return pattern;
 }
 
 static
@@ -363,10 +387,9 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
     tmp.length = cursor->length - cursor->offset;
     tmp.offset = 0;
     
-    struct lxt_generator const * const generator = lxt_find_generator(variable,
-                                                                      template);
+    struct lxt_generator const * generator = NULL;
     
-    if (generator != NULL) {
+    if (lxt_find_generator(&generator, variable, template)) {
         if (lxt_resolve_generator(&tmp, generator, template) != 0) {
             return -1;
         }
@@ -376,16 +399,15 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
         return 0;
     }
     
-    struct lxt_container const * const container = lxt_find_container(variable,
-                                                                      template);
+    struct lxt_container const * container = NULL;
     
-    if (container == NULL) {
+    if (!lxt_find_container(&container, variable, template)) {
         return -1;
     }
     
-    size_t const entry_index = lxt_rand32(template->seed) % container->entry_count;
+    size_t const i = lxt_rand32(template->seed) % container->entry_count;
     
-    struct lxt_token const * entry = &container->entries[entry_index];
+    struct lxt_token const * entry = &container->entries[i];
     
     if (lxt_append_entry(&tmp, entry) != 0) {
         return -1;
@@ -413,35 +435,41 @@ lxt_append_entry(struct lxt_cursor * const cursor,
 }
 
 static
-struct lxt_generator const *
-lxt_find_generator(struct lxt_token const * const token,
+bool
+lxt_find_generator(struct lxt_generator const ** const generator,
+                   struct lxt_token const * const token,
                    struct lxt_template const * const template)
 {
     for (size_t i = 0; i < template->generator_count; i++) {
         struct lxt_generator const * const match = &template->generators[i];
         
         if (lxt_token_equals(token, match->entry.start, match->entry.length)) {
-            return match;
+            *generator = match;
+            
+            return true;
         }
     }
     
-    return NULL;
+    return false;
 }
 
 static
-struct lxt_container const *
-lxt_find_container(struct lxt_token const * const token,
+bool
+lxt_find_container(struct lxt_container const ** const container,
+                   struct lxt_token const * const token,
                    struct lxt_template const * const template)
 {
     for (size_t i = 0; i < template->container_count; i++) {
         struct lxt_container const * const match = &template->containers[i];
         
         if (lxt_token_equals(token, match->entry.start, match->entry.length)) {
-            return match;
+            *container = match;
+            
+            return true;
         }
     }
     
-    return NULL;
+    return false;
 }
 
 static
@@ -460,3 +488,4 @@ lxt_token_equals(struct lxt_token const * const token,
     
     return true;
 }
+
