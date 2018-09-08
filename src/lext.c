@@ -20,6 +20,11 @@ enum lxt_kind {
     LXT_KIND_SEQUENCE
 };
 
+enum lxt_direction {
+    LXT_DIRECTION_FORWARD,
+    LXT_DIRECTION_BACKWARD
+};
+
 struct lxt_token {
     char const * start;
     size_t length;
@@ -62,6 +67,8 @@ static char const * lxt_parse_next(struct lxt_token *,
                                    enum lxt_kind *,
                                    char const * pattern);
 
+static bool lxt_is_keyword(char character, enum lxt_kind *);
+
 static int32_t lxt_handle_token(struct lxt_template *,
                                 struct lxt_token,
                                 enum lxt_kind);
@@ -95,6 +102,9 @@ static bool lxt_find_container(struct lxt_container const **,
 static bool lxt_token_equals(struct lxt_token const *,
                              char const * name,
                              size_t length);
+
+static size_t lxt_count_space(char const * text,
+                              enum lxt_direction);
 
 void
 lxt_gen(char * const result,
@@ -212,49 +222,24 @@ lxt_parse_next(struct lxt_token * const token,
 {
     *kind = LXT_KIND_NONE;
     
-    token->start = NULL;
+    token->start = pattern;
     token->length = 0;
     
     while (*pattern) {
-        switch (*pattern) {
-            case '(': {
-                *kind = LXT_KIND_CONTAINER;
-            } break;
-                
-            case ',':
-                /* fall through */
-            case ')': {
-                *kind = LXT_KIND_CONTAINER_ENTRY;
-            } break;
-                
-            case '<': {
-                *kind = LXT_KIND_GENERATOR;
-            } break;
-                
-            case '>': {
-                *kind = LXT_KIND_SEQUENCE;
-            } break;
-                
-            default:
-                break;
-        }
-        
-        if (*kind != LXT_KIND_NONE) {
-            // skip trailing whitespace
-            char const * p = pattern - 1;
+        if (lxt_is_keyword(*pattern, kind)) {
+            // trim leading whitespace
+            size_t const leading = lxt_count_space(token->start,
+                                                   LXT_DIRECTION_FORWARD);
             
-            while (isspace(*p)) {
-                token->length -= 1;
-                
-                p--;
-            }
+            token->start = token->start + leading;
+            token->length -= leading;
             
+            // trim trailing whitespace
+            token->length -= lxt_count_space(pattern - 1, /* skipping current */
+                                             LXT_DIRECTION_BACKWARD);
+            
+            // skip this character
             return pattern + 1;
-        }
-        
-        if (token->start == NULL && !isspace(*pattern)) {
-            // skip leading whitespace
-            token->start = pattern;
         }
         
         if (token->start != NULL) {
@@ -265,6 +250,43 @@ lxt_parse_next(struct lxt_token * const token,
     }
     
     return pattern;
+}
+
+static
+bool
+lxt_is_keyword(char const character,
+               enum lxt_kind * const kind)
+{
+    *kind = LXT_KIND_NONE;
+    
+    switch (character) {
+        case '(': {
+            *kind = LXT_KIND_CONTAINER;
+        } break;
+            
+        case ',':
+            /* fall through */
+        case ')': {
+            *kind = LXT_KIND_CONTAINER_ENTRY;
+        } break;
+            
+        case '<': {
+            *kind = LXT_KIND_GENERATOR;
+        } break;
+            
+        case '>': {
+            *kind = LXT_KIND_SEQUENCE;
+        } break;
+            
+        default:
+            break;
+    }
+    
+    if (*kind != LXT_KIND_NONE) {
+        return true;
+    }
+    
+    return false;
 }
 
 static
@@ -576,5 +598,22 @@ lxt_token_equals(struct lxt_token const * const token,
     }
     
     return true;
+}
+
+static
+size_t
+lxt_count_space(char const * text,
+                enum lxt_direction const direction)
+{
+    size_t length = 0;
+    size_t const offset = direction == LXT_DIRECTION_BACKWARD ? -1 : 1;
+    
+    while (isspace(*text)) {
+        length += 1;
+        
+        text += offset;
+    }
+    
+    return length;
 }
 
