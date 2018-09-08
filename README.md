@@ -2,15 +2,13 @@
 
 [![code style: compliant](https://img.shields.io/badge/code%20style-compliant-000000.svg)](https://github.com/jhauberg/comply)
 
-LEXT, or Lexical Templates, is a format and zero-dependency library for generating pseudo-random sequences of text.
-
-It is useful for generating texts that are seemingly random, but strictly adheres to a specific style or aesthetic.
+LEXT, or Lexical Templates, is a [format](#format-specification) and zero-dependency library for generating pseudo-random sequences of text that strictly adheres to a specific style or aesthetic.
 
 ## Usage
 
-The LEXT library is intended to be small and hassle-free. You can build it as a static library that you link into your program, or just drop its few sources directly into your existing project.
+Integrating and using the LEXT library should be straightforward and hassle-free.
 
-See [Building](#building) for instructions on building the project from source.
+You can build it as a static library that you link into your program, or just drop its few sources directly into your existing project. See [Building](#building) for instructions on building the library from source.
 
 ### Example
 
@@ -22,10 +20,10 @@ Here's a small program that generates and prints `Hello World`:
 int32_t
 main(void)
 {
-	char const * const format = "word (World, Hello) sequence <@word @word>";
+    char const * const format = "word (World, Hello) sequence <@word @word>";
     char buffer[64];
 
-	uint32_t seed = 12345;
+    uint32_t seed = 12345;
 
     lxt_gen(buffer, sizeof(buffer), format, (struct lxt_opts) {
         .generator = NULL,
@@ -38,24 +36,26 @@ main(void)
 }
 ```
 
+*Note that given the same seed, LEXT will generate an identical result on any platform.*
+
 Take a look in [examples](/example) for more samples of usage.
 
 ## Building
 
-LEXT can be built as a static library by using the included [CMake](https://cmake.org) scripts.
+LEXT can be easily built as a static library by using the included [CMake](https://cmake.org) scripts.
 
-To generate build files for your platform, make your way to the root of the LEXT repository and run CMake:
+To generate build files for your system, make your way to the root of the LEXT repository and run CMake:
 
 ```console
 $ cd lext
 $ cmake .
 ```
 
-## Format
+## Format Specification
 
-The LEXT format is simple and consists of only two basic concepts; **containers** and **generators**.
+The LEXT format is simple and consist of only two basic concepts; **containers** and **generators**.
 
-There are no complicated algorithms or procedures involved. It is essentially just plain old recursive substitution, but formalized.
+It's essentially nothing more than plain old recursive substitution, but formalized. There are no complicated algorithms or procedures involved.
 
 ### Containers
 
