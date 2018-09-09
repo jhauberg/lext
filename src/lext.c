@@ -606,7 +606,8 @@ lxt_count_space(char const * text,
                 enum lxt_direction const direction)
 {
     size_t length = 0;
-    size_t const offset = direction == LXT_DIRECTION_BACKWARD ? -1 : 1;
+    
+    int32_t const offset = direction == LXT_DIRECTION_BACKWARD ? -1 : 1;
     
     while (isspace(*text)) {
         length += 1;
