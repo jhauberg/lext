@@ -91,7 +91,8 @@ static int32_t lxt_resolve_variable(struct lxt_cursor *,
                                     struct lxt_token const *,
                                     struct lxt_template const *);
 
-static int32_t lxt_write_entry(struct lxt_cursor *,
+static int32_t lxt_write(struct lxt_cursor *, char);
+static int32_t lxt_write_token(struct lxt_cursor *,
                                struct lxt_token const *);
 
 static bool lxt_find_generator(struct lxt_generator const **,
@@ -480,8 +481,9 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
                 return -1;
             }
             
-            cursor->buffer[cursor->offset] = *p;
-            cursor->offset += 1;
+            if (lxt_write(cursor, *p) != 0) {
+                return -1;
+            }
         }
         
         p++;
@@ -503,20 +505,12 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
                      struct lxt_token const * const variable,
                      struct lxt_template const * const template)
 {
-    struct lxt_cursor tmp;
-    
-    tmp.buffer = cursor->buffer + cursor->offset;
-    tmp.length = cursor->length - cursor->offset;
-    tmp.offset = 0;
-    
     struct lxt_generator const * generator = NULL;
     
     if (lxt_find_generator(&generator, variable, template)) {
-        if (lxt_resolve_generator(&tmp, generator, template) != 0) {
+        if (lxt_resolve_generator(cursor, generator, template) != 0) {
             return -1;
         }
-        
-        cursor->offset += tmp.offset;
         
         return 0;
     }
@@ -531,27 +525,44 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
     
     struct lxt_token const * entry = &container->entries[i];
     
-    if (lxt_write_entry(&tmp, entry) != 0) {
+    if (lxt_write_token(cursor, entry) != 0) {
         return -1;
     }
-    
-    cursor->offset += tmp.offset;
     
     return 0;
 }
 
 static
 int32_t
-lxt_write_entry(struct lxt_cursor * const cursor,
+lxt_write(struct lxt_cursor * const cursor,
+          char const character)
+{
+    char const buffer[2] = {
+        character, '\0'
+    };
+    
+    struct lxt_token token;
+    
+    token.start = buffer;
+    token.length = 1;
+    
+    return lxt_write_token(cursor, &token);
+}
+
+static
+int32_t
+lxt_write_token(struct lxt_cursor * const cursor,
                 struct lxt_token const * const entry)
 {
     if (entry->length >= cursor->length - cursor->offset) {
         return -1;
     }
     
-    cursor->offset += entry->length;
+    memcpy(cursor->buffer + cursor->offset,
+           entry->start,
+           entry->length);
     
-    memcpy(cursor->buffer, entry->start, entry->length);
+    cursor->offset += entry->length;
     
     return 0;
 }
