@@ -69,9 +69,11 @@ static char const * lxt_parse_next(struct lxt_token *,
 
 static bool lxt_is_keyword(char character, enum lxt_kind *);
 
-static int32_t lxt_handle_token(struct lxt_template *,
-                                struct lxt_token,
-                                enum lxt_kind);
+static void lxt_trim_token(struct lxt_token *);
+
+static int32_t lxt_process_token(struct lxt_template *,
+                                 struct lxt_token,
+                                 enum lxt_kind);
 
 static int32_t lxt_append_container(struct lxt_template *,
                                     struct lxt_token);
@@ -206,7 +208,7 @@ lxt_parse(struct lxt_template * const template,
             continue;
         }
         
-        if (lxt_handle_token(template, token, kind) != 0) {
+        if (lxt_process_token(template, token, kind) != 0) {
             return -1;
         }
     }
@@ -227,17 +229,6 @@ lxt_parse_next(struct lxt_token * const token,
     
     while (*pattern) {
         if (lxt_is_keyword(*pattern, kind)) {
-            // trim leading whitespace
-            size_t const leading = lxt_count_space(token->start,
-                                                   LXT_DIRECTION_FORWARD);
-            
-            token->start = token->start + leading;
-            token->length -= leading;
-            
-            // trim trailing whitespace
-            token->length -= lxt_count_space(pattern - 1, /* skipping current */
-                                             LXT_DIRECTION_BACKWARD);
-            
             // skip this character
             return pattern + 1;
         }
@@ -290,11 +281,31 @@ lxt_is_keyword(char const character,
 }
 
 static
-int32_t
-lxt_handle_token(struct lxt_template * const template,
-                 struct lxt_token const token,
-                 enum lxt_kind const kind)
+void
+lxt_trim_token(struct lxt_token * const token)
 {
+    // trim trailing whitespace
+    size_t const trailing = lxt_count_space(token->start + token->length,
+                                            LXT_DIRECTION_BACKWARD);
+    
+    token->length -= trailing;
+    
+    // trim leading whitespace
+    size_t const leading = lxt_count_space(token->start,
+                                           LXT_DIRECTION_FORWARD);
+    
+    token->start = token->start + leading;
+    token->length -= leading;
+}
+
+static
+int32_t
+lxt_process_token(struct lxt_template * const template,
+                  struct lxt_token token,
+                  enum lxt_kind const kind)
+{
+    lxt_trim_token(&token);
+    
     switch (kind) {
         case LXT_KIND_CONTAINER: {
             if (lxt_append_container(template, token) != 0) {
@@ -606,8 +617,12 @@ lxt_count_space(char const * text,
                 enum lxt_direction const direction)
 {
     size_t length = 0;
+    int32_t offset = 1;
     
-    int32_t const offset = direction == LXT_DIRECTION_BACKWARD ? -1 : 1;
+    if (direction == LXT_DIRECTION_BACKWARD) {
+        text = text - 1;
+        offset = -1;
+    }
     
     while (isspace(*text)) {
         length += 1;
