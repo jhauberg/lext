@@ -439,11 +439,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
     bool token_ended = false;
     
     while (*p && n != generator->sequence.length) {
-        if (strncmp(p, "@", 1) == 0) {
-            if (token_started) {
-                return -1;
-            }
-            
+        if (strncmp(p, "@", 1) == 0 && !token_started) {
             if (isspace(*(p + 1))) {
                 // immediately followed by whitespace
                 return -1;
@@ -468,6 +464,12 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
             variable.length += 1;
         }
         
+        if (token_started && n + 1 == generator->sequence.length) {
+            // sequence ends next iteration, but token must still be resolved
+            token_started = false;
+            token_ended = true;
+        }
+        
         if (token_ended) {
             token_ended = false;
             
@@ -488,12 +490,6 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         
         p++;
         n++;
-    }
-    
-    if (token_started && !token_ended) {
-        if (lxt_resolve_variable(cursor, &variable, template) != 0) {
-            return -1;
-        }
     }
     
     return 0;
