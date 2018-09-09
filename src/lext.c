@@ -479,10 +479,6 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         }
         
         if (!token_started && !token_ended) {
-            if (cursor->offset >= cursor->length) {
-                return -1;
-            }
-            
             if (lxt_write(cursor, *p) != 0) {
                 return -1;
             }
@@ -550,7 +546,8 @@ int32_t
 lxt_write_token(struct lxt_cursor * const cursor,
                 struct lxt_token const * const entry)
 {
-    if (entry->length >= cursor->length - cursor->offset) {
+    if (cursor->offset >= cursor->length ||
+        entry->length >= cursor->length - cursor->offset) {
         return -1;
     }
     
