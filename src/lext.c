@@ -24,7 +24,7 @@ enum lxt_kind {
 
 enum lxt_direction {
     LXT_DIRECTION_FORWARD,
-    LXT_DIRECTION_BACKWARD
+    LXT_DIRECTION_REVERSE
 };
 
 struct lxt_token {
@@ -339,8 +339,8 @@ lxt_trim_token(struct lxt_token * const token)
     token->start = token->start + leading;
     token->length -= leading;
     
-    size_t const trailing = lxt_count_space(token->start + token->length,
-                                            LXT_DIRECTION_BACKWARD);
+    size_t const trailing = lxt_count_space(token->start + token->length - 1,
+                                            LXT_DIRECTION_REVERSE);
     
     token->length -= trailing;
 }
@@ -628,14 +628,9 @@ lxt_count_space(char const * text,
                 enum lxt_direction const direction)
 {
     size_t length = 0;
-    int32_t offset = 1;
+    int32_t offset = direction == LXT_DIRECTION_REVERSE ? -1 : 1;
     
-    if (direction == LXT_DIRECTION_BACKWARD) {
-        text = text - 1;
-        offset = -1;
-    }
-    
-    while (isspace(*text)) {
+    while (*text && isspace(*text)) {
         length += 1;
         
         text += offset;
