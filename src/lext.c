@@ -472,11 +472,11 @@ lxt_append_sequence(struct lxt_template * const template,
 static
 int32_t
 lxt_resolve_generator(struct lxt_cursor * const cursor,
-                      struct lxt_generator const * const generator,
+                      struct lxt_generator const * const gen,
                       struct lxt_template const * const template)
 {
-    char const * next = generator->sequence.start;
-    char const * const end = next + generator->sequence.length;
+    char const * next = gen->sequence.start;
+    char const * const end = next + gen->sequence.length;
     
     while (*next && next != end) {
         struct lxt_token token;
@@ -495,6 +495,13 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         }
         
         if (kind == LXT_KIND_VARIABLE) {
+            if (token.length == gen->entry.length &&
+                strncmp(token.start, gen->entry.start, token.length) == 0) {
+                // variable points to its own generator; skip it or
+                // incur the wrath of infinite recursion
+                continue;
+            }
+            
             if (lxt_resolve_variable(cursor, &token, template) != 0) {
                 return -1;
             }
