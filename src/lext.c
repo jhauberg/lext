@@ -17,7 +17,9 @@ enum lxt_kind {
     LXT_KIND_CONTAINER,
     LXT_KIND_CONTAINER_ENTRY,
     LXT_KIND_GENERATOR,
-    LXT_KIND_SEQUENCE
+    LXT_KIND_SEQUENCE,
+    LXT_KIND_VARIABLE,
+    LXT_KIND_TEXT
 };
 
 enum lxt_direction {
@@ -63,9 +65,13 @@ static void lxt_get_generator(struct lxt_generator const **,
 
 static int32_t lxt_parse(struct lxt_template *,
                          char const * pattern);
-static char const * lxt_parse_next(struct lxt_token *,
-                                   enum lxt_kind *,
-                                   char const * pattern);
+static char const * lxt_parse_token(struct lxt_token *,
+                                    enum lxt_kind *,
+                                    char const * pattern);
+static char const * lxt_parse_sequence(struct lxt_token *,
+                                       enum lxt_kind *,
+                                       char const * sequence,
+                                       char const * end);
 
 static bool lxt_is_keyword(char character, enum lxt_kind *);
 
@@ -91,7 +97,6 @@ static int32_t lxt_resolve_variable(struct lxt_cursor *,
                                     struct lxt_token const *,
                                     struct lxt_template const *);
 
-static int32_t lxt_write(struct lxt_cursor *, char);
 static int32_t lxt_write_token(struct lxt_cursor *,
                                struct lxt_token const *);
 
@@ -203,7 +208,7 @@ lxt_parse(struct lxt_template * const template,
         struct lxt_token token;
         enum lxt_kind kind;
         
-        pattern = lxt_parse_next(&token, &kind, pattern);
+        pattern = lxt_parse_token(&token, &kind, pattern);
         
         if (kind == LXT_KIND_NONE) {
             continue;
@@ -219,9 +224,9 @@ lxt_parse(struct lxt_template * const template,
 
 static
 char const *
-lxt_parse_next(struct lxt_token * const token,
-               enum lxt_kind * const kind,
-               char const * pattern)
+lxt_parse_token(struct lxt_token * const token,
+                enum lxt_kind * const kind,
+                char const * pattern)
 {
     *kind = LXT_KIND_NONE;
     
@@ -242,6 +247,49 @@ lxt_parse_next(struct lxt_token * const token,
     }
     
     return pattern;
+}
+
+static
+char const *
+lxt_parse_sequence(struct lxt_token * const token,
+                   enum lxt_kind * const kind,
+                   char const * sequence,
+                   char const * const end)
+{
+    *kind = LXT_KIND_NONE;
+    
+    token->length = 0;
+    token->start = NULL;
+    
+    while (*sequence && sequence != end) {
+        if (strncmp(sequence, "@", 1) == 0 && token->start == NULL) {
+            // skip this character
+            sequence++;
+            
+            token->start = sequence;
+            
+            *kind = LXT_KIND_VARIABLE;
+        }
+        
+        if (token->start != NULL && isspace(*sequence)) {
+            return sequence;
+        }
+        
+        if (token->start != NULL) {
+            token->length += 1;
+        } else {
+            token->start = sequence;
+            token->length = 1;
+            
+            *kind = LXT_KIND_TEXT;
+            
+            return sequence + 1;
+        }
+        
+        sequence++;
+    }
+    
+    return sequence;
 }
 
 static
@@ -285,18 +333,16 @@ static
 void
 lxt_trim_token(struct lxt_token * const token)
 {
-    // trim trailing whitespace
-    size_t const trailing = lxt_count_space(token->start + token->length,
-                                            LXT_DIRECTION_BACKWARD);
-    
-    token->length -= trailing;
-    
-    // trim leading whitespace
     size_t const leading = lxt_count_space(token->start,
                                            LXT_DIRECTION_FORWARD);
     
     token->start = token->start + leading;
     token->length -= leading;
+    
+    size_t const trailing = lxt_count_space(token->start + token->length,
+                                            LXT_DIRECTION_BACKWARD);
+    
+    token->length -= trailing;
 }
 
 static
@@ -331,8 +377,11 @@ lxt_process_token(struct lxt_template * const template,
                 return -1;
             }
         } break;
-            
+        
+        case LXT_KIND_VARIABLE:
+        case LXT_KIND_TEXT:
         case LXT_KIND_NONE:
+            /* fall through */
             break;
     }
     
@@ -426,66 +475,34 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
                       struct lxt_generator const * const generator,
                       struct lxt_template const * const template)
 {
-    size_t n = 0; // constraint to stay within substring length
+    char const * next = generator->sequence.start;
+    char const * const end = next + generator->sequence.length;
     
-    char const * p = generator->sequence.start;
-    
-    struct lxt_token variable = {
-        .start = NULL,
-        .length = 0
-    };
-    
-    bool token_started = false;
-    bool token_ended = false;
-    
-    while (*p && n != generator->sequence.length) {
-        if (strncmp(p, "@", 1) == 0 && !token_started) {
-            if (isspace(*(p + 1))) {
-                // immediately followed by whitespace
+    while (*next && next != end) {
+        struct lxt_token token;
+        enum lxt_kind kind;
+        
+        next = lxt_parse_sequence(&token, &kind, next, end);
+        
+        if (kind == LXT_KIND_NONE) {
+            continue;
+        }
+        
+        if (token.length == 0) {
+            // zero-length token will neither resolve as variable nor
+            // point to writable content; skip it
+            continue;
+        }
+        
+        if (kind == LXT_KIND_VARIABLE) {
+            if (lxt_resolve_variable(cursor, &token, template) != 0) {
                 return -1;
             }
-            
-            // skip this character
-            p++;
-            n++;
-            
-            variable.start = p;
-            variable.length = 0;
-            
-            token_started = true;
-        }
-        
-        if (token_started && isspace(*p)) {
-            token_started = false;
-            token_ended = true;
-        }
-        
-        if (token_started && !token_ended) {
-            variable.length += 1;
-        }
-        
-        if (token_started && n + 1 == generator->sequence.length) {
-            // sequence ends next iteration, but token must still be resolved
-            token_started = false;
-            token_ended = true;
-        }
-        
-        if (token_ended) {
-            token_ended = false;
-            
-            if (lxt_resolve_variable(cursor, &variable, template) != 0) {
+        } else if (kind == LXT_KIND_TEXT) {
+            if (lxt_write_token(cursor, &token) != 0) {
                 return -1;
             }
         }
-        
-        if (!token_started && !token_ended) {
-            if (lxt_write(cursor, *p) != 0) {
-                return -1;
-            }
-        }
-        
-        p++;
-        n++;
     }
     
     return 0;
@@ -522,23 +539,6 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
     }
     
     return 0;
-}
-
-static
-int32_t
-lxt_write(struct lxt_cursor * const cursor,
-          char const character)
-{
-    char const buffer[2] = {
-        character, '\0'
-    };
-    
-    struct lxt_token token;
-    
-    token.start = buffer;
-    token.length = 1;
-    
-    return lxt_write_token(cursor, &token);
 }
 
 static
