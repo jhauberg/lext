@@ -15,4 +15,5 @@ function(add_example name)
 	)
 endfunction()
 
+add_example(hello)
 add_example(simple)
