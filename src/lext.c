@@ -12,6 +12,7 @@
 
 #define MAX_CONTAINER_ENTRIES (128)
 
+#define VARIABLE_CHARACTER '@'
 #define COMMENT_CHARACTER '#'
 
 enum lxt_kind {
@@ -352,7 +353,7 @@ lxt_parse_sequence(struct lxt_token * const token,
     token->start = NULL;
     
     while (*sequence && sequence != end) {
-        if (strncmp(sequence, "@", 1) == 0 && token->start == NULL) {
+        if (token->start == NULL && *sequence == VARIABLE_CHARACTER) {
             // skip this character
             sequence++;
             
