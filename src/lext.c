@@ -1,4 +1,4 @@
-#include <lext/lext.h> // lxt_*
+#include <lext/lext.h> // lxt_opts, lxt_gen
 
 #include <string.h> // memset, strncmp
 #include <stddef.h> // size_t, NULL
@@ -12,6 +12,8 @@
 
 #define MAX_CONTAINER_ENTRIES (128)
 
+#define COMMENT_CHARACTER '#'
+
 enum lxt_kind {
     LXT_KIND_NONE,
     LXT_KIND_CONTAINER,
@@ -19,7 +21,8 @@ enum lxt_kind {
     LXT_KIND_GENERATOR,
     LXT_KIND_SEQUENCE,
     LXT_KIND_VARIABLE,
-    LXT_KIND_TEXT
+    LXT_KIND_TEXT,
+    LXT_KIND_COMMENT
 };
 
 enum lxt_direction {
@@ -277,7 +280,8 @@ lxt_parse(struct lxt_template * const template,
         
         pattern = lxt_parse_token(&token, &kind, pattern);
         
-        if (kind == LXT_KIND_NONE) {
+        if (kind == LXT_KIND_NONE ||
+            kind == LXT_KIND_COMMENT) {
             continue;
         }
         
@@ -301,14 +305,33 @@ lxt_parse_token(struct lxt_token * const token,
     token->length = 0;
     
     while (*pattern) {
-        if (lxt_is_keyword(*pattern, kind)) {
-            // skip this character
+        enum lxt_kind token_kind;
+        
+        if (lxt_is_keyword(*pattern, &token_kind)) {
+            *kind = token_kind;
+            
+            // skip the keyword character
             return pattern + 1;
         }
         
-        if (token->start != NULL) {
+        // look ahead and determine whether a comment is about to be initiated
+        if (*(pattern + 1) == COMMENT_CHARACTER) {
+            // include current character as part of current token
             token->length += 1;
+            // and skip it (jumping to start of comment)
+            return pattern + 1;
         }
+        
+        if (*pattern == COMMENT_CHARACTER) {
+            *kind = LXT_KIND_COMMENT;
+        } else if (*kind == LXT_KIND_COMMENT) {
+            if (*pattern == '\n') {
+                // comment ended; skip character
+                return pattern + 1;
+            }
+        }
+        
+        token->length += 1;
         
         pattern++;
     }
