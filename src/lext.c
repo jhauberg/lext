@@ -27,6 +27,14 @@ enum lxt_direction {
     LXT_DIRECTION_REVERSE
 };
 
+/**
+ * Represents a tokenized string in a template.
+ *
+ * A token is simply a pointer/length to a location inside a full template.
+ *
+ * To determine where a token ends, consumers must use its specified length,
+ * as the pointed string is *not* null-terminated.
+ */
 struct lxt_token {
     char const * start;
     size_t length;
@@ -51,6 +59,21 @@ struct lxt_template {
     size_t generator_count;
 };
 
+/**
+ * Represents a writable buffer.
+ *
+ * The length specifies the maximum length/size of the pointed buffer.
+ *
+ * The offset determines the location from which to write to the buffer
+ * (best conceptualized as "the cursor", or caret).
+ *
+ * For example:
+ *
+ *          |     (length = 5)
+ *     [•••••]    (buffer)
+ *      ^         (offset = 0)
+ *
+ */
 struct lxt_cursor {
     char * buffer;
     size_t offset;
@@ -75,6 +98,25 @@ static char const * lxt_parse_sequence(struct lxt_token *,
 
 static bool lxt_is_keyword(char character, enum lxt_kind *);
 
+/**
+ * Trim leading and trailing whitespace from a token.
+ *
+ * Since a token is just a pointer and length into a full template,
+ * trimming is done by counting the number of whitespaces from both ends and
+ * simply offsetting said pointer and length until it both starts- and
+ * ends in non-whitespace.
+ *
+ * Example (each • representing whitespace):
+ *
+ *      ↓       |     (length = 9)
+ *     [••text•••]
+ *
+ *   Results in:
+ *
+ *        ↓  |        (length = 4)
+ *     [••text•••]
+ *
+ */
 static void lxt_trim_token(struct lxt_token *);
 
 static int32_t lxt_process_token(struct lxt_template *,
@@ -111,6 +153,29 @@ static bool lxt_token_equals(struct lxt_token const *,
                              char const * name,
                              size_t length);
 
+/**
+ * Count the amount of whitespace to the left or right.
+ *
+ * Examples:
+ *
+ *      ↓
+ *     [••abc•••]    (forward, spaces = 2)
+ *       ↓
+ *     [••abc•••]    (forward, spaces = 1)
+ *        ↓
+ *     [••abc•••]    (forward, spaces = 0)
+ *          ↓
+ *     [••abc•••]    (forward, spaces = 0)
+ *           ↓
+ *     [••abc•••]    (forward, spaces = 3)
+ *        ↓
+ *     [••abc•••]    (reverse, spaces = 0)
+ *       ↓
+ *     [••abc•••]    (reverse, spaces = 2)
+ *            ↓
+ *     [••abc•••]    (reverse, spaces = 2)
+ *
+ */
 static size_t lxt_count_space(char const * text,
                               enum lxt_direction);
 
