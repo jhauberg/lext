@@ -3,6 +3,10 @@
 #include <stddef.h> // size_t
 #include <stdint.h> // uint32_t
 
+#define LXT_VERSION_MAJOR (0)
+#define LXT_VERSION_MINOR (2)
+#define LXT_VERSION_PATCH (0)
+
 /**
  * Represents optional settings that affect a generated result.
  */

@@ -24,3 +24,5 @@ option(LEXT_BUILD_EXAMPLES "Build example programs" ON)
 if(${LEXT_BUILD_EXAMPLES})
     add_subdirectory("example")
 endif()
+
+add_subdirectory("cli")
