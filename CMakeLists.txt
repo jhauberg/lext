@@ -11,7 +11,7 @@ add_library(lext STATIC
 
 target_include_directories(lext PUBLIC "include")
 
-target_compile_options(lext PRIVATE "-Wall" "-Wpedantic")
+target_compile_options(lext PRIVATE "-Wall")
 target_compile_features(lext PRIVATE c_std_99)
 
 set_target_properties(lext PROPERTIES
