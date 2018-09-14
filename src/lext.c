@@ -15,7 +15,13 @@
 #define VARIABLE_CHARACTER '@'
 #define COMMENT_CHARACTER '#'
 
+/**
+ * Represents the kind or type of a token.
+ */
 enum lxt_kind {
+    /**
+     * Token is of no particular kind and can be ignored.
+     */
     LXT_KIND_NONE,
     LXT_KIND_CONTAINER,
     LXT_KIND_CONTAINER_ENTRY,
@@ -86,20 +92,55 @@ struct lxt_cursor {
 
 static uint32_t lxt_rand32(uint32_t * seed);
 
+/**
+ * Get a pointer to a generator by name.
+ *
+ * If name is NULL, gets a random generator.
+ */
 static void lxt_get_generator(struct lxt_generator const **,
                               struct lxt_template const *,
                               char const * name);
 
 static int32_t lxt_parse(struct lxt_template *,
                          char const * pattern);
+/**
+ * Parse the current template token and return a pointer to the next.
+ *
+ * This function reads bytes up until reaching a keyword character,
+ * indicating how to interpret the read bytes.
+ *
+ * This is important to keep in mind, as it may seem counter-intuitive.
+ *
+ * For example, reading "abcd" immediately followed by an angle bracket ("<")
+ * would parse "abcd" as a generator token and discard the "<".
+ * The counter-intuitive issue here is that, in this case, the "<" does *not*
+ * represent the *beginning* of a generator sequence token, but rather signal
+ * the *end* of a generator token.
+ *
+ * An exception to this rule is comment tokens which are indicated
+ * by a starting keyword character ("#").
+ */
 static char const * lxt_parse_token(struct lxt_token *,
                                     enum lxt_kind *,
                                     char const * pattern);
+/**
+ * Parse the current sequence token and return a pointer to the next.
+ *
+ * Unlike `lxt_parse_token`, this function reads bytes and implicitly consider
+ * each byte read a text token.
+ *
+ * This is the case until a variable keyword character is encountered (or
+ * end of sequence), at which point any following bytes read, until reaching a
+ * whitespace character, are considered part of a variable token.
+ */
 static char const * lxt_parse_sequence(struct lxt_token *,
                                        enum lxt_kind *,
                                        char const * sequence,
                                        char const * end);
 
+/**
+ * Determine whether a character matches a token indicator.
+ */
 static bool lxt_is_keyword(char character, enum lxt_kind *);
 
 /**
