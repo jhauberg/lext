@@ -224,7 +224,7 @@ static bool lxt_token_equals(struct lxt_token const *,
 static size_t lxt_count_space(char const * text,
                               enum lxt_direction);
 
-enum lxt_result
+enum lxt_error
 lxt_gen(char * const buffer,
         size_t const length,
         char const * const pattern,
@@ -235,7 +235,7 @@ lxt_gen(char * const buffer,
     memset(&template, 0, sizeof(template));
     
     if (lxt_parse(&template, pattern) != 0) {
-        return LXT_RESULT_INVALID_TEMPLATE;
+        return LXT_ERROR_INVALID_TEMPLATE;
     }
     
     uint32_t default_seed = 2147483647;
@@ -251,7 +251,7 @@ lxt_gen(char * const buffer,
     lxt_get_generator(&generator, &template, options.generator);
     
     if (generator == NULL) {
-        return LXT_RESULT_GENERATOR_NOT_FOUND;
+        return LXT_ERROR_GENERATOR_NOT_FOUND;
     }
     
     struct lxt_cursor cursor;
@@ -267,7 +267,7 @@ lxt_gen(char * const buffer,
     // null-terminate the resulting buffer
     memset(buffer + cursor.offset, '\0', 1);
     
-    return LXT_RESULT_GENERATED;
+    return LXT_ERROR_NONE;
 }
 
 static
@@ -291,6 +291,8 @@ lxt_get_generator(struct lxt_generator const ** generator,
                   struct lxt_template const * const template,
                   char const * const name)
 {
+    *generator = NULL;
+    
     if (template->generator_count == 0) {
         return;
     }

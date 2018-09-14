@@ -20,10 +20,10 @@ struct lxt_opts {
 /**
  * Represents a result code, indicating success or not.
  */
-enum lxt_result {
-    LXT_RESULT_GENERATED,
-    LXT_RESULT_INVALID_TEMPLATE,
-    LXT_RESULT_GENERATOR_NOT_FOUND
+enum lxt_error {
+    LXT_ERROR_NONE,
+    LXT_ERROR_INVALID_TEMPLATE,
+    LXT_ERROR_GENERATOR_NOT_FOUND
 };
 
 /**
@@ -31,7 +31,7 @@ enum lxt_result {
  *
  * The result is truncated if it exceeds the specified length.
  */
-enum lxt_result lxt_gen(char * buffer,
-                        size_t length,
-                        char const * pattern,
-                        struct lxt_opts);
+enum lxt_error lxt_gen(char * buffer,
+                       size_t length,
+                       char const * pattern,
+                       struct lxt_opts);

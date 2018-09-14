@@ -30,14 +30,14 @@ main(void)
         // generate a result
         char result[64];
         
-        enum lxt_result success;
+        enum lxt_error error;
         
-        success = lxt_gen(result, sizeof(result), string, (struct lxt_opts) {
+        error = lxt_gen(result, sizeof(result), string, (struct lxt_opts) {
             .generator = NULL,
             .seed = &seed
         });
         
-        if (success == LXT_RESULT_GENERATED) {
+        if (error == LXT_ERROR_NONE) {
             printf("%s\n", result);
         }
     }
