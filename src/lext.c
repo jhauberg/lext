@@ -625,8 +625,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         }
         
         if (kind == LXT_KIND_VARIABLE) {
-            if (token.length == gen->entry.length &&
-                strncmp(token.start, gen->entry.start, token.length) == 0) {
+            if (lxt_token_equals(&token, gen->entry.start, gen->entry.length)) {
                 // variable points to its own generator; skip it or
                 // incur the wrath of infinite recursion
                 continue;
