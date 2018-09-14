@@ -12,7 +12,7 @@ You can build it as a static library that you link into your program, or just dr
 
 ### Example
 
-Here's a small program that generates and prints `Hello World`:
+Here's a [small program](/example/hello.c) that generates and prints `Hello World`:
 
 ```c
 #include <lext/lext.h>
@@ -71,7 +71,7 @@ letter (a, b, c, d)
 
 A generator defines the *format* and *sequence* of a generated output.
 
-In this example, a generator `scramble` is defined. This generator then defines a sequence of 3 variables, each pointing to a *container* named `letter`:
+In this example, a generator `scramble` is defined. This generator then defines a sequence of 3 variables (indicated by a word starting with `@`), each pointing to a *container* named `letter`:
 
 ```
 scramble <@letter, @letter, @letter>
