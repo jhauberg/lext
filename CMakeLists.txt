@@ -2,11 +2,16 @@ cmake_minimum_required(VERSION 3.6)
 
 project(lext LANGUAGES C)
 
-add_library(lext STATIC "src/lext.c")
+add_library(lext STATIC 
+	"src/lext.c"
+	"src/cursor.c"
+	"src/token.c"
+	"src/template.c"
+)
 
 target_include_directories(lext PUBLIC "include")
 
-target_compile_options(lext PRIVATE "-Wall")
+target_compile_options(lext PRIVATE "-Wall" "-Wpedantic")
 target_compile_features(lext PRIVATE c_std_99)
 
 set_target_properties(lext PROPERTIES
