@@ -483,7 +483,9 @@ lxt_process_token(struct lxt_template * const template,
                   struct lxt_token token,
                   enum lxt_kind const kind)
 {
-    lxt_trim_token(&token);
+    if (kind != LXT_KIND_NONE) {
+        lxt_trim_token(&token);
+    }
     
     switch (kind) {
         case LXT_KIND_CONTAINER: {
