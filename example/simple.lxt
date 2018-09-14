@@ -1,8 +1,8 @@
 # template for magical weaponry
 
-a (Earth, Wind, Water, Fire)
-b (Axe, Sword)
-c (Frozen, Fiery)
+type (Axe, Sword)
+element (Earth, Wind, Water, Fire)
+prefix (Frozen, Fiery)
 
-common <@b of @a>
-magic <@c @common>
+common <@type of @element>
+magic <@prefix @common>
