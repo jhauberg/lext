@@ -514,6 +514,7 @@ lxt_process_token(struct lxt_template * const template,
         
         case LXT_KIND_VARIABLE:
         case LXT_KIND_TEXT:
+        case LXT_KIND_COMMENT:
         case LXT_KIND_NONE:
             /* fall through */
             break;
