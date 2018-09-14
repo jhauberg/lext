@@ -185,7 +185,7 @@ static int32_t lxt_resolve_variable(struct lxt_cursor *,
                                     struct lxt_template const *);
 
 static int32_t lxt_write_token(struct lxt_cursor *,
-                               struct lxt_token const *);
+                               struct lxt_token);
 
 static bool lxt_find_generator(struct lxt_generator const **,
                                struct lxt_token const *,
@@ -635,7 +635,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
                 return -1;
             }
         } else if (kind == LXT_KIND_TEXT) {
-            if (lxt_write_token(cursor, &token) != 0) {
+            if (lxt_write_token(cursor, token) != 0) {
                 return -1;
             }
         }
@@ -670,7 +670,7 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
     
     struct lxt_token const * entry = &container->entries[i];
     
-    if (lxt_write_token(cursor, entry) != 0) {
+    if (lxt_write_token(cursor, *entry) != 0) {
         return -1;
     }
     
@@ -680,18 +680,27 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
 static
 int32_t
 lxt_write_token(struct lxt_cursor * const cursor,
-                struct lxt_token const * const entry)
+                struct lxt_token token)
 {
-    if (cursor->offset >= cursor->length ||
-        entry->length >= cursor->length - cursor->offset) {
+    if (token.length == 0) {
         return -1;
     }
     
-    memcpy(cursor->buffer + cursor->offset,
-           entry->start,
-           entry->length);
+    if (cursor->offset >= cursor->length) {
+        return -1;
+    }
     
-    cursor->offset += entry->length;
+    size_t const remaining_length = cursor->length - cursor->offset;
+    
+    if (token.length > remaining_length) {
+        token.length = remaining_length;
+    }
+    
+    memcpy(cursor->buffer + cursor->offset,
+           token.start,
+           token.length);
+    
+    cursor->offset += token.length;
     
     return 0;
 }
