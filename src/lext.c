@@ -322,11 +322,6 @@ lxt_parse(struct lxt_template * const template,
         
         pattern = lxt_parse_token(&token, &kind, pattern);
         
-        if (kind == LXT_KIND_NONE ||
-            kind == LXT_KIND_COMMENT) {
-            continue;
-        }
-        
         if (lxt_process_token(template, token, kind) != 0) {
             return -1;
         }
