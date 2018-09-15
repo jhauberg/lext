@@ -9,7 +9,7 @@
 #include <stddef.h> // size_t, NULL
 #include <stdint.h> // int32_t, uint32_t
 
-#include <ctype.h> // isspace
+#include <ctype.h> // isspace, isalpha
 
 extern inline uint32_t lxt_rand32(uint32_t * seed);
 
@@ -192,20 +192,23 @@ lxt_parse_sequence(struct lxt_token * const token,
             // skip this character
             sequence++;
             
+            // begin parsing variable
             token->start = sequence;
             
             *kind = LXT_KIND_VARIABLE;
         }
         
-        if (token->start != NULL && isspace(*sequence)) {
+        if (token->start != NULL && (isspace(*sequence) ||
+                                     !isalpha(*sequence))) {
+            // end parsing variable
             return sequence;
         }
         
-        if (token->start != NULL) {
-            token->length += 1;
-        } else {
+        token->length += 1;
+        
+        if (token->start == NULL) {
+            // parse as a chunk of text
             token->start = sequence;
-            token->length = 1;
             
             *kind = LXT_KIND_TEXT;
             
