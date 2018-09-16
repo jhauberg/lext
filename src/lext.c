@@ -62,6 +62,11 @@ static int32_t lxt_resolve_variable(struct lxt_cursor *,
                                     struct lxt_token const *,
                                     struct lxt_template const *);
 
+struct lxt_opts const LXT_OPTS_NONE = {
+    .generator = NULL,
+    .seed = NULL
+};
+
 enum lxt_error
 lxt_gen(char * const buffer,
         size_t const length,

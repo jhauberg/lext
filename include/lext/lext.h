@@ -21,6 +21,8 @@ struct lxt_opts {
     uint32_t * seed;
 };
 
+extern struct lxt_opts const LXT_OPTS_NONE;
+
 /**
  * Represents a result code, indicating success or not.
  */
