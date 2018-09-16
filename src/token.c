@@ -70,6 +70,41 @@ lxt_token_equals(struct lxt_token const * const token,
 }
 
 bool
+lxt_token_validates(struct lxt_token token,
+                    enum lxt_kind const kind)
+{
+    if (kind != LXT_KIND_VARIABLE &&
+        kind != LXT_KIND_CONTAINER &&
+        kind != LXT_KIND_GENERATOR) {
+        return true;
+    }
+    
+    for (size_t i = 0; i < token.length; i++) {
+        char const character = *(token.start + i);
+        
+        if (!lxt_token_character(character)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool
+lxt_token_character(char const character)
+{
+    bool const is_numerical =
+        (character >= '0' &&
+         character <= '9');
+    
+    bool const is_alphabetical =
+        (character >= 'A' && character <= 'Z') ||
+        (character >= 'a' && character <= 'z');
+    
+    return is_numerical || is_alphabetical || character == '_';
+}
+
+bool
 lxt_token_delimiter(char const character,
                     enum lxt_kind * const kind)
 {

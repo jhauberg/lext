@@ -56,6 +56,15 @@ void lxt_token_trim(struct lxt_token *);
 bool lxt_token_equals(struct lxt_token const *,
                       char const * name,
                       size_t length);
+
+/**
+ * Determine whether a token identifier consist of only valid characters.
+ */
+bool lxt_token_validates(struct lxt_token, enum lxt_kind);
+/**
+ * Determine whether a character is a valid token character.
+ */
+bool lxt_token_character(char character);
 /**
  * Determine whether a character matches a token delimiter.
  */

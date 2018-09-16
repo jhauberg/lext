@@ -9,8 +9,6 @@
 #include <stddef.h> // size_t, NULL
 #include <stdint.h> // int32_t, uint32_t
 
-#include <ctype.h> // isspace, isalpha
-
 extern inline uint32_t lxt_rand32(uint32_t * seed);
 
 /**
@@ -121,6 +119,14 @@ lxt_parse(struct lxt_template * const template,
         
         pattern = lxt_parse_token(&token, &kind, pattern);
         
+        if (kind != LXT_KIND_NONE) {
+            lxt_token_trim(&token);
+        }
+        
+        if (!lxt_token_validates(token, kind)) {
+            return -1;
+        }
+        
         if (lxt_process_token(template, token, kind) != 0) {
             return -1;
         }
@@ -198,8 +204,7 @@ lxt_parse_sequence(struct lxt_token * const token,
             *kind = LXT_KIND_VARIABLE;
         }
         
-        if (token->start != NULL && (isspace(*sequence) ||
-                                     !isalpha(*sequence))) {
+        if (token->start != NULL && !lxt_token_character(*sequence)) {
             // end parsing variable
             return sequence;
         }
@@ -227,10 +232,6 @@ lxt_process_token(struct lxt_template * const template,
                   struct lxt_token token,
                   enum lxt_kind const kind)
 {
-    if (kind != LXT_KIND_NONE) {
-        lxt_token_trim(&token);
-    }
-    
     switch (kind) {
         case LXT_KIND_CONTAINER: {
             if (lxt_append_container(template, token) != 0) {
