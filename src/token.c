@@ -38,19 +38,52 @@ enum lxt_direction {
 static size_t lxt_count_spaces(char const * text,
                                enum lxt_direction);
 
+static void lxt_token_trim_leading(struct lxt_token *);
+static void lxt_token_trim_trailing(struct lxt_token *);
+
+static
 void
-lxt_token_trim(struct lxt_token * const token)
+lxt_token_trim_leading(struct lxt_token * const token)
 {
+    if (token->length == 0) {
+        return;
+    }
+    
     size_t const leading = lxt_count_spaces(token->start,
                                             LXT_DIRECTION_FORWARD);
     
     token->start = token->start + leading;
-    token->length -= leading;
+    
+    if (token->length >= leading) {
+        token->length -= leading;
+    } else {
+        token->length = 0;
+    }
+}
+
+static
+void
+lxt_token_trim_trailing(struct lxt_token * const token)
+{
+    if (token->length == 0) {
+        return;
+    }
     
     size_t const trailing = lxt_count_spaces(token->start + token->length - 1,
                                              LXT_DIRECTION_REVERSE);
     
-    token->length -= trailing;
+    if (token->length >= trailing) {
+        token->length -= trailing;
+    } else {
+        token->length = 0;
+    }
+}
+
+void
+lxt_token_trim(struct lxt_token * const token)
+{
+    lxt_token_trim_leading(token);
+    lxt_token_trim_trailing(token);
 }
 
 bool
