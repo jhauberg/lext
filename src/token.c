@@ -1,42 +1,9 @@
 #include "token.h" // lxt_token, lxt_token_*
+#include "cursor.h" // lxt_cursor_spaces
 
 #include <stddef.h> // size_t
-#include <stdint.h> // int32_t
 #include <stdbool.h> // bool
 #include <string.h> // strncmp
-
-#include <ctype.h> // isspace
-
-enum lxt_direction {
-    LXT_DIRECTION_FORWARD,
-    LXT_DIRECTION_REVERSE
-};
-
-/**
- * Count the amount of whitespace to the left or right.
- *
- * Examples:
- *
- *      ↓
- *     [••abc•••]    (forward, spaces = 2)
- *       ↓
- *     [••abc•••]    (forward, spaces = 1)
- *        ↓
- *     [••abc•••]    (forward, spaces = 0)
- *          ↓
- *     [••abc•••]    (forward, spaces = 0)
- *           ↓
- *     [••abc•••]    (forward, spaces = 3)
- *        ↓
- *     [••abc•••]    (reverse, spaces = 0)
- *       ↓
- *     [••abc•••]    (reverse, spaces = 2)
- *            ↓
- *     [••abc•••]    (reverse, spaces = 2)
- *
- */
-static size_t lxt_count_spaces(char const * text,
-                               enum lxt_direction);
 
 static void lxt_token_trim_leading(struct lxt_token *);
 static void lxt_token_trim_trailing(struct lxt_token *);
@@ -49,8 +16,8 @@ lxt_token_trim_leading(struct lxt_token * const token)
         return;
     }
     
-    size_t const leading = lxt_count_spaces(token->start,
-                                            LXT_DIRECTION_FORWARD);
+    size_t const leading = lxt_cursor_spaces(token->start,
+                                             LXT_CURSOR_DIRECTION_FORWARD);
     
     token->start = token->start + leading;
     
@@ -69,8 +36,8 @@ lxt_token_trim_trailing(struct lxt_token * const token)
         return;
     }
     
-    size_t const trailing = lxt_count_spaces(token->start + token->length - 1,
-                                             LXT_DIRECTION_REVERSE);
+    size_t const trailing = lxt_cursor_spaces(token->start + token->length - 1,
+                                              LXT_CURSOR_DIRECTION_REVERSE);
     
     if (token->length >= trailing) {
         token->length -= trailing;
@@ -171,21 +138,4 @@ lxt_token_delimiter(char const character,
     }
     
     return true;
-}
-
-static
-size_t
-lxt_count_spaces(char const * text,
-                 enum lxt_direction const direction)
-{
-    size_t length = 0;
-    int32_t offset = direction == LXT_DIRECTION_REVERSE ? -1 : 1;
-    
-    while (*text && isspace(*text)) {
-        length += 1;
-        
-        text += offset;
-    }
-    
-    return length;
 }
