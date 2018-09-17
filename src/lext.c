@@ -124,6 +124,9 @@ lxt_parse(struct lxt_template * const template,
         
         pattern = lxt_parse_token(&token, &kind, pattern);
         
+        if (token.length == 0) {
+            continue;
+        }
         if (kind != LXT_KIND_NONE) {
             lxt_token_trim(&token);
         }
