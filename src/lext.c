@@ -343,6 +343,11 @@ lxt_resolve_variable(struct lxt_cursor * const cursor,
         return -1;
     }
     
+    if (container->entry_count == 0) {
+        // resolve by doing nothing
+        return 0;
+    }
+    
     size_t const i = lxt_rand32(template->seed) % container->entry_count;
     
     struct lxt_token const * entry = &container->entries[i];
