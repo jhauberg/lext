@@ -2,11 +2,27 @@
 
 [![code style: compliant](https://img.shields.io/badge/code%20style-compliant-000000.svg)](https://github.com/jhauberg/comply)
 
-LEXT, or Lexical Templates, is a [format](#format-specification) and zero-dependency library for generating pseudo-random sequences of text that strictly adheres to a specific style or aesthetic.
+LEXT, or Lexical Templates, is a [format](#format-specification) and zero-dependency library for recursively generating pseudo-random sequences of text that strictly adheres to a specific pattern.
+
+```lxt
+# lxt for magical weaponry
+
+type (Axe, Sword)
+element (Earth, Wind, Water, Fire)
+prefix (Frozen, Fiery)
+
+common <@type of @element>
+magic <@prefix @common>
+```
+
+```console
+Fiery Sword of Water
+Axe of Earth
+```
 
 ## Usage
 
-Integrating and using the LEXT library should be straightforward and hassle-free.
+Integrating and using the LEXT library is relatively straightforward.
 
 You can build it as a static library that you link into your program, or just drop its few sources directly into your existing project. See [Building](#building) for instructions on building the library from source.
 
@@ -39,6 +55,10 @@ main(void)
 *Note that given the same seed, LEXT will generate an identical result on any platform.*
 
 Take a look in [examples](/example) for more samples of usage.
+
+### CLI
+
+The project provides [a basic CLI](/cli) for using LXT-patterns from a terminal. You just have to build it.
 
 ## Building
 
