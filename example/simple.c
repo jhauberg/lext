@@ -13,7 +13,7 @@ main(void)
     // read in entire file
     fseek(file, 0, SEEK_END);
     
-    size_t const length = ftell(file);
+    size_t const length = (size_t)ftell(file);
     
     fseek(file, 0, SEEK_SET);
     
