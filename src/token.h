@@ -56,9 +56,8 @@ enum lxt_kind {
  *
  */
 void lxt_token_trim(struct lxt_token *);
-bool lxt_token_equals(struct lxt_token const *,
-                      char const * name,
-                      size_t length);
+bool lxt_token_equals(struct lxt_token,
+                      struct lxt_token other);
 
 /**
  * Determine whether a token identifier consist of only valid characters.

@@ -373,7 +373,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
         }
         
         if (kind == LXT_KIND_VARIABLE) {
-            if (lxt_token_equals(&token, gen->entry.start, gen->entry.length)) {
+            if (lxt_token_equals(token, gen->entry)) {
                 // variable points to its own generator; skip it or
                 // incur the wrath of infinite recursion
                 continue;

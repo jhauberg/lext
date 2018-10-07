@@ -54,15 +54,14 @@ lxt_token_trim(struct lxt_token * const token)
 }
 
 bool
-lxt_token_equals(struct lxt_token const * const token,
-                 char const * const name,
-                 size_t const length)
+lxt_token_equals(struct lxt_token const token,
+                 struct lxt_token const other)
 {
-    if (token->length != length) {
+    if (token.length != other.length) {
         return false;
     }
     
-    if (strncmp(token->start, name, token->length) != 0) {
+    if (strncmp(token.start, other.start, token.length) != 0) {
         return false;
     }
     

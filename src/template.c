@@ -41,7 +41,7 @@ lxt_find_generator(struct lxt_generator const ** const generator,
     for (size_t i = 0; i < template->generator_count; i++) {
         struct lxt_generator const * const match = &template->generators[i];
         
-        if (lxt_token_equals(token, match->entry.start, match->entry.length)) {
+        if (lxt_token_equals(*token, match->entry)) {
             *generator = match;
             
             return true;
@@ -59,7 +59,7 @@ lxt_find_container(struct lxt_container const ** const container,
     for (size_t i = 0; i < template->container_count; i++) {
         struct lxt_container const * const match = &template->containers[i];
         
-        if (lxt_token_equals(token, match->entry.start, match->entry.length)) {
+        if (lxt_token_equals(*token, match->entry)) {
             *container = match;
             
             return true;
