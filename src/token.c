@@ -105,37 +105,65 @@ lxt_token_character(char const character)
 }
 
 bool
-lxt_token_delimiter(char const character,
-                    enum lxt_kind * const kind)
+lxt_token_starts(enum lxt_kind * kind,
+                 char const * pattern)
 {
     *kind = LXT_KIND_NONE;
     
-    switch (character) {
-        case '(': {
-            *kind = LXT_KIND_CONTAINER;
+    switch (*pattern) {
+        case COMMENT_CHARACTER: {
+            *kind = LXT_KIND_COMMENT;
         } break;
             
-        case ',':
+        case '(':
             /* fall through */
-        case ')': {
+        case ',': {
             *kind = LXT_KIND_CONTAINER_ENTRY;
+        } break;
+            
+        case '<': {
+            *kind = LXT_KIND_SEQUENCE;
+        } break;
+            
+        case ')':
+            /* fall through */
+        case '>': {
+            // indicate that a token of no particular kind starts here
+            return true;
+        }
+            
+        default:
+            break;
+    }
+    
+    return (*kind != LXT_KIND_NONE);
+}
+
+bool
+lxt_token_ends(enum lxt_kind * const kind,
+               char const * pattern)
+{
+    *kind = LXT_KIND_NONE;
+    
+    char const next = *(pattern + 1);
+    
+    switch (next) {
+        case '(': {
+            *kind = LXT_KIND_CONTAINER;
         } break;
             
         case '<': {
             *kind = LXT_KIND_GENERATOR;
         } break;
             
-        case '>': {
-            *kind = LXT_KIND_SEQUENCE;
-        } break;
+        case COMMENT_CHARACTER: {
+            // indicate that a token of no particular kind ends here
+            return true;
+        }
             
         default:
             break;
     }
     
-    if (*kind == LXT_KIND_NONE) {
-        return false;
-    }
-    
-    return true;
+    return (*kind != LXT_KIND_NONE);
 }

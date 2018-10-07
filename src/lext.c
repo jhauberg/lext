@@ -51,6 +51,14 @@ static char const * lxt_parse_sequence(struct lxt_token *,
                                        char const * sequence,
                                        char const * end);
 
+static char const * lxt_read_token(struct lxt_token * token,
+                                   enum lxt_kind kind,
+                                   char const * pattern);
+
+static char const * lxt_read_up_to(struct lxt_token *,
+                                   char const delimiters[],
+                                   size_t delimiter_count);
+
 static int32_t lxt_process_token(struct lxt_template *,
                                  struct lxt_token,
                                  enum lxt_kind);
@@ -121,10 +129,11 @@ lxt_parse(struct lxt_template * const template,
     while (*pattern) {
         struct lxt_token token;
         enum lxt_kind kind;
-        
+
         pattern = lxt_parse_token(&token, &kind, pattern);
         
-        if (kind != LXT_KIND_NONE) {
+        if (kind != LXT_KIND_NONE &&
+            kind != LXT_KIND_COMMENT) {
             lxt_token_trim(&token);
         }
         
@@ -146,43 +155,104 @@ lxt_parse(struct lxt_template * const template,
 
 static
 char const *
+lxt_read_up_to(struct lxt_token * const token,
+               char const delimiters[const],
+               size_t const delimiter_count)
+{
+    char const * p = token->start;
+    
+    while (*p) {
+        char const c = *p;
+        
+        for (size_t i = 0; i < delimiter_count; i++) {
+            char const delimiter = delimiters[i];
+            
+            if (c == delimiter) {
+                // delimiter reached; skip it
+                return p;
+            }
+        }
+        
+        token->length += 1;
+        
+        p++;
+    }
+    
+    return p;
+}
+
+static
+char const *
+lxt_read_token(struct lxt_token * const token,
+               enum lxt_kind const kind,
+               char const * pattern)
+{
+    switch (kind) {
+        case LXT_KIND_COMMENT: {
+            token->start = pattern;
+            
+            char delimiters[1] = { '\n' };
+            
+            return lxt_read_up_to(token, delimiters, 1);
+        }
+            
+        case LXT_KIND_CONTAINER_ENTRY: {
+            token->start = pattern + 1;
+            
+            char delimiters[2] = { ')', ',' };
+            
+            return lxt_read_up_to(token, delimiters, 2);
+        }
+            
+        case LXT_KIND_SEQUENCE: {
+            token->start = pattern + 1;
+            
+            char delimiters[1] = { '>' };
+            
+            return lxt_read_up_to(token, delimiters, 1);
+        }
+            
+        case LXT_KIND_NONE: {
+            token->start = pattern;
+            token->length += 1;
+            
+            return pattern + token->length;
+        }
+            
+        case LXT_KIND_CONTAINER:
+        case LXT_KIND_GENERATOR:
+        case LXT_KIND_VARIABLE:
+        case LXT_KIND_TEXT:
+            /* fall through */
+            break;
+    }
+    
+    return NULL;
+}
+
+static
+char const *
 lxt_parse_token(struct lxt_token * const token,
                 enum lxt_kind * const kind,
                 char const * pattern)
 {
     *kind = LXT_KIND_NONE;
-    
-    token->start = pattern;
+
+    token->start = NULL;
     token->length = 0;
     
+    if (lxt_token_starts(kind, pattern)) {
+        return lxt_read_token(token, *kind, pattern);
+    }
+    
+    token->start = pattern;
+    
     while (*pattern) {
-        enum lxt_kind token_kind;
-        
-        if (lxt_token_delimiter(*pattern, &token_kind)) {
-            *kind = token_kind;
-            
-            // skip the keyword character
-            return pattern + 1;
-        }
-        
-        // look ahead and determine whether a comment is about to be initiated
-        if (*(pattern + 1) == COMMENT_CHARACTER) {
-            // include current character as part of current token
-            token->length += 1;
-            // and skip it (jumping to start of comment)
-            return pattern + 1;
-        }
-        
-        if (*pattern == COMMENT_CHARACTER) {
-            *kind = LXT_KIND_COMMENT;
-        } else if (*kind == LXT_KIND_COMMENT) {
-            if (*pattern == '\n') {
-                // comment ended; skip character
-                return pattern + 1;
-            }
-        }
-        
         token->length += 1;
+        
+        if (lxt_token_ends(kind, pattern)) {
+            return pattern + 1;
+        }
         
         pattern++;
     }

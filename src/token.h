@@ -68,7 +68,6 @@ bool lxt_token_validates(struct lxt_token, enum lxt_kind);
  * Determine whether a character is a valid token character.
  */
 bool lxt_token_character(char character);
-/**
- * Determine whether a character matches a token delimiter.
- */
-bool lxt_token_delimiter(char character, enum lxt_kind *);
+
+bool lxt_token_starts(enum lxt_kind *, char const * pattern);
+bool lxt_token_ends(enum lxt_kind *, char const * pattern);
