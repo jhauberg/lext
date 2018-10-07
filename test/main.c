@@ -126,6 +126,14 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "a, 1<2, (a)") == 0);
+    
+    // should skip variables leading to infinite recursion
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequence <@sequence a>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, " a") == 0);
 }
 
 int32_t
