@@ -56,6 +56,10 @@ enum lxt_kind {
  *
  */
 void lxt_token_trim(struct lxt_token *);
+
+/**
+ * Determine whether a token equals another token.
+ */
 bool lxt_token_equals(struct lxt_token,
                       struct lxt_token other);
 
@@ -68,5 +72,11 @@ bool lxt_token_validates(struct lxt_token, enum lxt_kind);
  */
 bool lxt_token_character(char character);
 
+/**
+ * Determine whether a token starts at a given pattern.
+ */
 bool lxt_token_starts(enum lxt_kind *, char const * pattern);
+/**
+ * Determine whether a token ends at a given pattern.
+ */
 bool lxt_token_ends(enum lxt_kind *, char const * pattern);

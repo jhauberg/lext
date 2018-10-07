@@ -17,10 +17,10 @@ extern inline uint32_t lxt_rand32(uint32_t * seed);
 static int32_t lxt_parse(struct lxt_template *,
                          char const * pattern);
 /**
- * Parse the current template token and return a pointer to the next.
+ * Parse the current token and return a pointer to the next.
  *
- * This function reads bytes up until reaching a keyword character,
- * indicating how to interpret the read bytes.
+ * This function reads bytes up until reaching a keyword character, indicating
+ * how to interpret either the bytes already read, or the bytes to come.
  *
  * This is important to keep in mind, as it may seem counter-intuitive.
  *
@@ -51,10 +51,17 @@ static char const * lxt_parse_sequence(struct lxt_token *,
                                        char const * sequence,
                                        char const * end);
 
+/**
+ * Read the next bytes as a particular kind of token and return a pointer to
+ * the end.
+ */
 static char const * lxt_read_token(struct lxt_token * token,
                                    enum lxt_kind kind,
                                    char const * pattern);
-
+/**
+ * Read bytes from the start of a token up to, but not including, any specified
+ * delimiting character.
+ */
 static char const * lxt_read_up_to(struct lxt_token *,
                                    char const delimiters[],
                                    size_t delimiter_count);
