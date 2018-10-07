@@ -3,6 +3,9 @@
 #include <stddef.h> // size_t
 #include <stdbool.h> // bool
 
+#define VARIABLE_CHARACTER '@'
+#define COMMENT_CHARACTER '#'
+
 /**
  * Represents a tokenized string in a template.
  *

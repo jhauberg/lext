@@ -11,9 +11,6 @@
 
 #define MAX_CONTAINER_ENTRIES (128)
 
-#define VARIABLE_CHARACTER '@'
-#define COMMENT_CHARACTER '#'
-
 struct lxt_container {
     struct lxt_token entries[MAX_CONTAINER_ENTRIES];
     struct lxt_token entry;
