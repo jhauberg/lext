@@ -163,7 +163,7 @@ lxt_parse(struct lxt_template * const template,
 static
 char const *
 lxt_read_up_to(struct lxt_token * const token,
-               char const delimiters[const],
+               char const delimiters[],
                size_t const delimiter_count)
 {
     char const * p = token->start;
