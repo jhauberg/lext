@@ -23,7 +23,7 @@ lxt_get_generator(struct lxt_generator const ** generator,
         token.start = name;
         token.length = strlen(name);
         
-        if (lxt_find_generator(generator, &token, template)) {
+        if (lxt_find_generator(generator, token, template)) {
             return;
         }
     }
@@ -35,13 +35,13 @@ lxt_get_generator(struct lxt_generator const ** generator,
 
 bool
 lxt_find_generator(struct lxt_generator const ** const generator,
-                   struct lxt_token const * const token,
+                   struct lxt_token const token,
                    struct lxt_template const * const template)
 {
     for (size_t i = 0; i < template->generator_count; i++) {
         struct lxt_generator const * const match = &template->generators[i];
         
-        if (lxt_token_equals(*token, match->entry)) {
+        if (lxt_token_equals(token, match->entry)) {
             *generator = match;
             
             return true;
@@ -53,13 +53,13 @@ lxt_find_generator(struct lxt_generator const ** const generator,
 
 bool
 lxt_find_container(struct lxt_container const ** const container,
-                   struct lxt_token const * const token,
+                   struct lxt_token const token,
                    struct lxt_template const * const template)
 {
     for (size_t i = 0; i < template->container_count; i++) {
         struct lxt_container const * const match = &template->containers[i];
         
-        if (lxt_token_equals(*token, match->entry)) {
+        if (lxt_token_equals(token, match->entry)) {
             *container = match;
             
             return true;

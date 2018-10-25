@@ -40,10 +40,10 @@ void lxt_get_generator(struct lxt_generator const **,
                        char const * name);
 
 bool lxt_find_generator(struct lxt_generator const **,
-                        struct lxt_token const *,
+                        struct lxt_token,
                         struct lxt_template const *);
 bool lxt_find_container(struct lxt_container const **,
-                        struct lxt_token const *,
+                        struct lxt_token,
                         struct lxt_template const *);
 
 int32_t lxt_append_container(struct lxt_template *,

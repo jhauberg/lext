@@ -74,7 +74,7 @@ static int32_t lxt_resolve_generator(struct lxt_cursor *,
                                      struct lxt_generator const *,
                                      struct lxt_template const *);
 static int32_t lxt_resolve_variable(struct lxt_cursor *,
-                                    struct lxt_token const *,
+                                    struct lxt_token,
                                     struct lxt_template const *);
 
 struct lxt_opts const LXT_OPTS_NONE = {
@@ -175,7 +175,6 @@ lxt_read_up_to(struct lxt_token * const token,
             char const delimiter = delimiters[i];
             
             if (c == delimiter) {
-                // delimiter reached; skip it
                 return p;
             }
         }
@@ -386,7 +385,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
                 continue;
             }
             
-            if (lxt_resolve_variable(cursor, &token, template) != 0) {
+            if (lxt_resolve_variable(cursor, token, template) != 0) {
                 return -1;
             }
         } else if (kind == LXT_KIND_TEXT) {
@@ -402,7 +401,7 @@ lxt_resolve_generator(struct lxt_cursor * const cursor,
 static
 int32_t
 lxt_resolve_variable(struct lxt_cursor * const cursor,
-                     struct lxt_token const * const variable,
+                     struct lxt_token const variable,
                      struct lxt_template const * const template)
 {
     struct lxt_generator const * generator = NULL;

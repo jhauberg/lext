@@ -8,44 +8,6 @@
 static void lxt_token_trim_leading(struct lxt_token *);
 static void lxt_token_trim_trailing(struct lxt_token *);
 
-static
-void
-lxt_token_trim_leading(struct lxt_token * const token)
-{
-    if (token->length == 0) {
-        return;
-    }
-    
-    size_t const leading = lxt_cursor_spaces(token->start,
-                                             LXT_CURSOR_DIRECTION_FORWARD);
-    
-    token->start = token->start + leading;
-    
-    if (token->length >= leading) {
-        token->length -= leading;
-    } else {
-        token->length = 0;
-    }
-}
-
-static
-void
-lxt_token_trim_trailing(struct lxt_token * const token)
-{
-    if (token->length == 0) {
-        return;
-    }
-    
-    size_t const trailing = lxt_cursor_spaces(token->start + token->length - 1,
-                                              LXT_CURSOR_DIRECTION_REVERSE);
-    
-    if (token->length >= trailing) {
-        token->length -= trailing;
-    } else {
-        token->length = 0;
-    }
-}
-
 void
 lxt_token_trim(struct lxt_token * const token)
 {
@@ -165,4 +127,42 @@ lxt_token_ends(enum lxt_kind * const kind,
     }
     
     return (*kind != LXT_KIND_NONE);
+}
+
+static
+void
+lxt_token_trim_leading(struct lxt_token * const token)
+{
+    if (token->length == 0) {
+        return;
+    }
+    
+    size_t const leading = lxt_cursor_spaces(token->start,
+                                             LXT_CURSOR_DIRECTION_FORWARD);
+    
+    token->start = token->start + leading;
+    
+    if (token->length >= leading) {
+        token->length -= leading;
+    } else {
+        token->length = 0;
+    }
+}
+
+static
+void
+lxt_token_trim_trailing(struct lxt_token * const token)
+{
+    if (token->length == 0) {
+        return;
+    }
+    
+    size_t const trailing = lxt_cursor_spaces(token->start + token->length - 1,
+                                              LXT_CURSOR_DIRECTION_REVERSE);
+    
+    if (token->length >= trailing) {
+        token->length -= trailing;
+    } else {
+        token->length = 0;
+    }
 }

@@ -56,5 +56,4 @@ int32_t lxt_cursor_write(struct lxt_cursor *, struct lxt_token);
  *     [••abc•••]    (reverse, spaces = 2)
  *
  */
-size_t lxt_cursor_spaces(char const * text,
-                         enum lxt_cursor_direction);
+size_t lxt_cursor_spaces(char const * text, enum lxt_cursor_direction);
