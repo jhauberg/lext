@@ -2,7 +2,7 @@
 
 [![code style: compliant](https://img.shields.io/badge/code%20style-compliant-000000.svg)](https://github.com/jhauberg/comply)
 
-LEXT, or Lexical Templates, is a [format](#format-specification) and zero-dependency library for recursively generating pseudo-random sequences of text that strictly adheres to a specific pattern.
+LEXT, or Lexical Templates, is a [format specification](#format-specification) and zero-dependency library for recursively generating pseudo-random sequences of text that strictly adheres to a specific pattern.
 
 ```lxt
 # lxt for magical weaponry
@@ -19,6 +19,12 @@ magic <@prefix @common>
 Fiery Sword of Water
 Axe of Earth
 ```
+
+---
+
+**Disclaimer:**
+
+*Both library and specification has been built and established as an exercise in developing a parser and tokenizer.*
 
 ## Usage
 
