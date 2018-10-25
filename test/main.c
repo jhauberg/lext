@@ -57,6 +57,14 @@ test_various(void)
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "entry") == 0);
     
+    // should parse variables without separating whitespace
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequence <@container@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "entryentry") == 0);
+    
     // should parse template even without any whitespace
     error = lxt_gen(buffer, sizeof(buffer),
                     "container(entry)sequence<@container>",
