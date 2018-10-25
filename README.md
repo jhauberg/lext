@@ -20,11 +20,9 @@ Fiery Sword of Water
 Axe of Earth
 ```
 
----
-
 **Disclaimer:**
 
-*Both library and specification has been built and established as an exercise in developing a parser and tokenizer.*
+Both library and specification has been built and established as an exercise in developing a parser and tokenizer.
 
 ## Usage
 
