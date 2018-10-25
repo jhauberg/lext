@@ -80,7 +80,15 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "") == 0);
-
+    
+    // should blank out 0-length variables
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequence <@container @>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "entry ") == 0);
+    
     // should not append blank entry to container
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (entry) empty (   ) sequence <@empty>",
