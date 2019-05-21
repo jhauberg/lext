@@ -2,7 +2,7 @@
 
 [![code style: compliant](https://img.shields.io/badge/code%20style-compliant-000000.svg)](https://github.com/jhauberg/comply)
 
-LEXT, or Lexical Templates, is a [format specification](#format-specification) and zero-dependency library for recursively generating pseudo-random sequences of text that strictly adheres to a specific pattern.
+LEXT, or Lexical Templates, is a [format specification](#format-specification) and [zero-dependency library](#usage) for generating pseudo-random sequences of text through recursive substitution.
 
 ```lxt
 # lxt for magical weaponry
@@ -22,7 +22,7 @@ Axe of Earth
 
 **Disclaimer:**
 
-Both library and specification has been built and established as an exercise in developing a parser and tokenizer.
+Both library and specification has been built and established as an exercise more so than an attempt at making an actually useful thing.
 
 ## Usage
 
@@ -77,13 +77,13 @@ $ cmake .
 
 ## Format Specification
 
-The LEXT format is simple and consist of only two basic concepts; **containers** and **generators**.
-
-It's essentially nothing more than plain old recursive substitution, but formalized. There are no complicated algorithms or procedures involved.
+The LEXT format is simple and consist of only two basic concepts; [containers](#containers) and [generators](#generators).
 
 ### Containers
 
 A container holds all the pieces of text that can be *sequenced* by a *generator*.
+
+A LEXT can have any number of containers.
 
 The following example defines a container named `letter` that holds the strings/characters `a`, `b`, `c` and `d`:
 
@@ -95,13 +95,15 @@ letter (a, b, c, d)
 
 A generator defines the *format* and *sequence* of a generated output.
 
+A LEXT can have any number of generators.
+
 In this example, a generator `scramble` is defined. This generator then defines a sequence of 3 variables (indicated by a word starting with `@`), each pointing to a *container* named `letter`:
 
 ```
 scramble <@letter, @letter, @letter>
 ```
 
-When this generator is invoked and a result is to be sequenced, each variable will be replaced by a randomly picked item from the `letter` container. For instance, one result could be `c, a, b`, but another could just as well be `a, b, c`.
+When this generator is invoked and a result is to be sequenced, each variable will be replaced by a randomly picked item from the `letter` container. For instance, a result could be `c, a, b`, `a, b, c` or even `a, a, a`.
 
 #### Sequences
 
@@ -113,7 +115,7 @@ For example, expanding on the previous `scramble` generator:
 example <a few letters: @scramble>
 ```
 
-When invoked, the `example` generator will sequence the initial text `a few letters:` before finally resolving and sequencing the `scramble` generator. This results in an output like `a few letters: b, c, a`.
+When invoked, the `example` generator will sequence the initial text `a few letters: ` before finally resolving and sequencing the `scramble` generator. This results in an output like `a few letters: b, c, a`.
 
 ## License
 
