@@ -25,4 +25,5 @@ if(${LEXT_BUILD_EXAMPLES})
     add_subdirectory("example")
 endif()
 
+add_subdirectory("test")
 add_subdirectory("cli")
