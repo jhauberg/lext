@@ -1,6 +1,10 @@
 # ignore build output
 *.o
 *.a
+cli/lext
+example/hello
+example/simple
+test/test
 
 # ignore CMake output
 CMakeCache.txt
