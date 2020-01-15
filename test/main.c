@@ -28,6 +28,28 @@ test_truncation(void)
 
 static
 void
+test_invalid_template(void)
+{
+    enum lxt_error error;
+    char buffer[64];
+
+    // bad container name
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "conta iner (entry) sequence <@container>",
+                    LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_INVALID_TEMPLATE);
+
+    // bad generator name
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequ ence <@container>",
+                    LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_INVALID_TEMPLATE);
+}
+
+static
+void
 test_various(void)
 {
     enum lxt_error error;
@@ -112,21 +134,7 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "a") == 0);
-    
-    // bad container name
-    error = lxt_gen(buffer, sizeof(buffer),
-                    "conta iner (entry) sequence <@container>",
-                    LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_INVALID_TEMPLATE);
-    
-    // bad generator name
-    error = lxt_gen(buffer, sizeof(buffer),
-                    "container (entry) sequ ence <@container>",
-                    LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_INVALID_TEMPLATE);
-    
+
     // delimiters in entries
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (ab<c>de(fg) sequence <@container>",
@@ -156,6 +164,7 @@ int32_t
 main(void)
 {
     test_various();
+    test_invalid_template();
     test_truncation();
     
     return 0;
