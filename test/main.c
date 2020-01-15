@@ -174,6 +174,12 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, " a") == 0);
+
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) <@container>",
+                    LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_GENERATOR_NOT_FOUND);
 }
 
 int32_t
