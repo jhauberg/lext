@@ -50,6 +50,22 @@ test_invalid_template(void)
 
 static
 void
+test_escapes(void)
+{
+    enum lxt_error error;
+    char buffer[64];
+
+    // should escape variable-character @ as a literal
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequence <\\@@container>",
+                    LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "@entry") == 0);
+}
+
+static
+void
 test_various(void)
 {
     enum lxt_error error;
@@ -165,6 +181,7 @@ main(void)
 {
     test_various();
     test_invalid_template();
+    test_escapes();
     test_truncation();
     
     return 0;
