@@ -170,10 +170,11 @@ lxt_read_up_to(struct lxt_token * const token,
     
     while (*p) {
         char const c = *p;
-        
+
         for (size_t i = 0; i < delimiter_count; i++) {
             char const delimiter = delimiters[i];
             
+            // todo: unless preceded by backslash?
             if (c == delimiter) {
                 return p;
             }
@@ -281,6 +282,7 @@ lxt_parse_sequence(struct lxt_token * const token,
     while (*sequence && sequence != end) {
         if (token->start == NULL && *sequence == VARIABLE_CHARACTER) {
             // skip this character
+            // todo: unless preceded by backslash?
             sequence++;
             
             // begin parsing variable

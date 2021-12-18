@@ -55,13 +55,23 @@ test_escapes(void)
     enum lxt_error error;
     char buffer[64];
 
-    // should escape variable-character @ as a literal
+    // should escape variable-character @ as a literal 
+    // (double backslash here to escape backslash for compiler; 
+    //  in a .lxt-file this would just be "\@@container")
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (entry) sequence <\\@@container>",
                     LXT_OPTS_NONE);
 
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "@entry") == 0);
+    
+    // should escape backslash-character \ as a literal
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) sequence <\\\\@container>",
+                    LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\\entry") == 0);
 }
 
 static
