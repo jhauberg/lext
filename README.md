@@ -40,13 +40,14 @@ Here's a [small program](/example/hello.c) that generates and prints `Hello Worl
 int32_t
 main(void)
 {
-    char const * const format = "word (World, Hello) sequence <@word @word>";
+    char const * const format = "word (World, Hello) hello <@word @word>";
     char buffer[64];
 
-    uint32_t seed = 12345;
+    uint32_t seed = 1234;
 
     lxt_gen(buffer, sizeof(buffer), format, (struct lxt_opts) {
-        .generator = NULL,
+        // select any random generator; in this case always `hello`
+        .generator = LXT_OPTS_GENERATOR_ANY,
         .seed = &seed
     });
     
@@ -56,7 +57,7 @@ main(void)
 }
 ```
 
-*Note that given the same seed, LEXT will generate an identical result on any platform.*
+*Note that given the same options (seed and generator), LEXT will generate identical results on any platform.*
 
 Take a look in [examples](/example) for more samples of usage.
 
@@ -85,7 +86,7 @@ A container holds all the pieces of text that can be *sequenced* by a *generator
 
 A LEXT can have any number of containers.
 
-The following example defines a container named `letter` that holds the strings/characters `a`, `b`, `c` and `d`:
+The following example defines a container named `letter` that holds the strings `a`, `b`, `c` and `d` (each string delimited by a single comma `,`):
 
 ```
 letter (a, b, c, d)
@@ -97,19 +98,21 @@ A generator defines the *format* and *sequence* of a generated output.
 
 A LEXT can have any number of generators.
 
-In this example, a generator `scramble` is defined. This generator then defines a sequence of 3 variables (indicated by a word starting with `@`), each pointing to a *container* named `letter`:
+In this example, a generator `scramble` is defined. This generator then defines a sequence of text including 3 variables (indicated by a word starting with `@`), each pointing to a *container* named `letter`:
 
 ```
 scramble <@letter, @letter, @letter>
 ```
 
+*Note that commas in sequences are _not_ delimiters; they are part of the text.*
+
 When this generator is invoked and a result is to be sequenced, each variable will be replaced by a randomly picked item from the `letter` container. For instance, a result could be `c, a, b`, `a, b, c` or even `a, a, a`.
 
-#### Sequences
+#### Sequencing
 
-A sequence can hold a variable that points to another generator. This makes sequencing fully recursive, allowing for more complex patterns.
+A generator can also sequence a variable that points to another generator. This makes sequencing fully recursive, allowing for more complex patterns.
 
-For example, expanding on the previous `scramble` generator:
+For example, here's a generator with a sequence that refers to the `scramble` generator:
 
 ```
 example <a few letters: @scramble>
