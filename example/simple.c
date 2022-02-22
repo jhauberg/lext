@@ -9,6 +9,10 @@ int32_t
 main(void)
 {
     FILE * const file = fopen("simple.lxt", "rb");
+    
+    if (file == NULL) {
+        return -1;
+    }
 
     // read in entire file
     fseek(file, 0, SEEK_END);
