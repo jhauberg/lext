@@ -13,6 +13,13 @@
 struct lxt_opts {
     /**
      * Specifies the name of a specific generator to run.
+     * 
+     * If set to `NULL`, a random generator will be selected.
+     * 
+     * Note that selecting a random generator affects the subsequent
+     * generated results; i.e. the results from a randomly selected
+     * generator is not necessarily identical to the results you would
+     * get from picking that same generator manually.
      */
     char const * generator;
     /**

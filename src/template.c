@@ -28,6 +28,8 @@ lxt_get_generator(struct lxt_generator const ** generator,
         }
     }
     
+    // todo: consider whether to use an internal seed for this specifically
+    //       - it might be confusing that an option can have side-effect on results?
     size_t const i = lxt_rand32(template->seed);
     
     *generator = &template->generators[i % template->generator_count];

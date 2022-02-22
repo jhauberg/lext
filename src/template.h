@@ -33,7 +33,7 @@ struct lxt_template {
 /**
  * Get a pointer to a generator by name.
  *
- * If name is NULL, gets a random generator.
+ * If name is `NULL`, gets a random generator. This advances the seed.
  */
 void lxt_get_generator(struct lxt_generator const **,
                        struct lxt_template const *,
