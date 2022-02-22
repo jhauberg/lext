@@ -21,6 +21,11 @@ struct lxt_opts {
     uint32_t * seed;
 };
 
+/**
+ * Defines an option for selecting any random generator in a template.
+ */
+#define LXT_OPTS_GENERATOR_ANY (NULL)
+
 extern struct lxt_opts const LXT_OPTS_NONE;
 
 /**

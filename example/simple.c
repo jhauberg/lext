@@ -37,7 +37,7 @@ main(void)
         enum lxt_error error;
         
         error = lxt_gen(result, sizeof(result), string, (struct lxt_opts) {
-            .generator = NULL,
+            .generator = LXT_OPTS_GENERATOR_ANY,
             .seed = &seed
         });
         
