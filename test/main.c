@@ -161,15 +161,23 @@ test_various(void)
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "a") == 0);
 
-    // delimiters in entries
+    // generator delimiters in entries
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (ab<c>de(fg) sequence <@container>",
                     LXT_OPTS_NONE);
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "ab<c>de(fg") == 0);
+
+    // container delimiters in entries
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (a\\,b,a) sequence <@container>",
+                    LXT_OPTS_NONE);
     
-    // delimiters in sequence
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "a,a") == 0);
+    
+    // container delimiters in sequence
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (a) sequence <@container, 1<2, (@container)>",
                     LXT_OPTS_NONE);
