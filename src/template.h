@@ -6,10 +6,12 @@
 #include <stdint.h> // uint32_t, int32_t
 #include <stdbool.h> // bool
 
-#define MAX_CONTAINERS (64)
-#define MAX_GENERATORS (64)
+// though there are no particular reasons for these constraints,
+// LEXTs should preferably be kept small
+#define MAX_CONTAINERS (8)
+#define MAX_GENERATORS (8)
 
-#define MAX_CONTAINER_ENTRIES (128)
+#define MAX_CONTAINER_ENTRIES (16)
 
 struct lxt_container {
     struct lxt_token entries[MAX_CONTAINER_ENTRIES];
