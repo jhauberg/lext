@@ -205,6 +205,44 @@ test_various(void)
                     LXT_OPTS_NONE);
 
     assert(error == LXT_ERROR_GENERATOR_NOT_FOUND);
+
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (a) sequence <@@@@@container@ @>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "a ") == 0);
+
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (b,,,b,b,) sequence <@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "b") == 0);
+
+    // quotes are part of container entries
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (a, \"b\", \"c\") sequence <@container>",
+                LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"b\"") == 0);
+
+    // ...and do not need to be balanced
+    error = lxt_gen(buffer, sizeof(buffer),
+            "container (a, \"b, \"c\") sequence <@container>",
+            LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"b") == 0);
+
+    // quotes are part of sequence text too
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (a, b, c) sequence <\"text @container\">",
+                LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"text b\"") == 0);
 }
 
 int32_t
