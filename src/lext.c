@@ -198,25 +198,37 @@ lxt_read_token(struct lxt_token * const token,
         case LXT_KIND_COMMENT: {
             token->start = pattern;
             
-            char delimiters[1] = { '\n' };
+            size_t const count = 1;
+
+            char const delimiters[count] = { 
+                '\n' 
+            };
             
-            return lxt_read_up_to(token, delimiters, 1);
+            return lxt_read_up_to(token, delimiters, count);
         }
             
         case LXT_KIND_CONTAINER_ENTRY: {
             token->start = pattern + 1;
+
+            size_t const count = 2;
+
+            char const delimiters[count] = { 
+                CONTAINER_END, CONTAINER_DELIMITER 
+            };
             
-            char delimiters[2] = { ')', ',' };
-            
-            return lxt_read_up_to(token, delimiters, 2);
+            return lxt_read_up_to(token, delimiters, count);
         }
             
         case LXT_KIND_SEQUENCE: {
             token->start = pattern + 1;
             
-            char delimiters[1] = { '>' };
+            size_t const count = 1;
+
+            char const delimiters[count] = { 
+                GENERATOR_END 
+            };
             
-            return lxt_read_up_to(token, delimiters, 1);
+            return lxt_read_up_to(token, delimiters, count);
         }
             
         case LXT_KIND_NONE: {
@@ -280,9 +292,7 @@ lxt_parse_sequence(struct lxt_token * const token,
     token->start = NULL;
     
     while (*sequence && sequence != end) {
-        if (token->start == NULL && *sequence == VARIABLE_CHARACTER) {
-            // skip this character
-            // todo: unless preceded by backslash?
+        if (token->start == NULL && *sequence == VARIABLE) {
             sequence++;
             
             // begin parsing variable

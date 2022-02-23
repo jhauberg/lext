@@ -3,8 +3,13 @@
 #include <stddef.h> // size_t
 #include <stdbool.h> // bool
 
-#define VARIABLE_CHARACTER '@'
-#define COMMENT_CHARACTER '#'
+#define CONTAINER_START '('
+#define CONTAINER_END ')'
+#define CONTAINER_DELIMITER ','
+#define VARIABLE '@'
+#define COMMENT '#'
+#define GENERATOR_START '<'
+#define GENERATOR_END '>'
 
 /**
  * Represents a tokenized string in a template.

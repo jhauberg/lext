@@ -72,23 +72,23 @@ lxt_token_starts(enum lxt_kind * kind,
     *kind = LXT_KIND_NONE;
     
     switch (*pattern) {
-        case COMMENT_CHARACTER: {
+        case COMMENT: {
             *kind = LXT_KIND_COMMENT;
         } break;
             
-        case '(':
+        case CONTAINER_START:
             /* fall through */
-        case ',': {
+        case CONTAINER_DELIMITER: {
             *kind = LXT_KIND_CONTAINER_ENTRY;
         } break;
             
-        case '<': {
+        case GENERATOR_START: {
             *kind = LXT_KIND_SEQUENCE;
         } break;
             
-        case ')':
+        case CONTAINER_END:
             /* fall through */
-        case '>': {
+        case GENERATOR_END: {
             // indicate that a token of no particular kind starts here
             return true;
         }
@@ -109,15 +109,15 @@ lxt_token_ends(enum lxt_kind * const kind,
     char const next = *(pattern + 1);
     
     switch (next) {
-        case '(': {
+        case CONTAINER_START: {
             *kind = LXT_KIND_CONTAINER;
         } break;
             
-        case '<': {
+        case GENERATOR_START: {
             *kind = LXT_KIND_GENERATOR;
         } break;
             
-        case COMMENT_CHARACTER: {
+        case COMMENT: {
             // indicate that a token of no particular kind ends here
             return true;
         }
