@@ -174,7 +174,6 @@ lxt_read_up_to(struct lxt_token * const token,
         for (size_t i = 0; i < delimiter_count; i++) {
             char const delimiter = delimiters[i];
             
-            // todo: unless preceded by backslash?
             if (c == delimiter) {
                 return p;
             }

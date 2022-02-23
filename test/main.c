@@ -55,23 +55,38 @@ test_escapes(void)
     enum lxt_error error;
     char buffer[64];
 
-    // should escape variable-character @ as a literal 
-    // (double backslash here to escape backslash for compiler; 
-    //  in a .lxt-file this would just be "\@@container")
+    // literal backslash
     error = lxt_gen(buffer, sizeof(buffer),
-                    "container (entry) sequence <\\@@container>",
+                    "container (entry) sequence <\\ @container>",
                     LXT_OPTS_NONE);
 
     assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "@entry") == 0);
-    
-    // should escape backslash-character \ as a literal
+    assert(strcmp(buffer, "\\ entry") == 0);
+
     error = lxt_gen(buffer, sizeof(buffer),
                     "container (entry) sequence <\\\\@container>",
                     LXT_OPTS_NONE);
 
     assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\\\\entry") == 0);
+
+    // LEXT does not support escaping reserved characters as literals;
+    // in this case, 2 variables are parsed, though only one resolves
+    // (i.e. each '@' is effectively one variable)
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (entry) sequence <\\@@container>",
+                LXT_OPTS_NONE);
+
+    assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "\\entry") == 0);
+
+    // similarly, entry delimiters can not be escaped
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (a\\,b\\,a) sequence <@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "b\\") == 0);
 }
 
 static
@@ -168,14 +183,6 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "ab<c>de(fg") == 0);
-
-    // container delimiters in entries
-    error = lxt_gen(buffer, sizeof(buffer),
-                    "container (a\\,b,a) sequence <@container>",
-                    LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "a,a") == 0);
     
     // container delimiters in sequence
     error = lxt_gen(buffer, sizeof(buffer),
