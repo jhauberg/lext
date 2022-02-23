@@ -84,8 +84,6 @@ The LEXT format is simple and consist of only two basic concepts; [containers](#
 
 A container holds all the pieces of text that can be *sequenced* by a *generator*.
 
-A LEXT can have any number of containers.
-
 The following example defines a container named `letter` that holds the strings `a`, `b`, `c` and `d` (each string delimited by a single comma `,`):
 
 ```
@@ -95,8 +93,6 @@ letter (a, b, c, d)
 ### Generators
 
 A generator defines the *format* and *sequence* of a generated output.
-
-A LEXT can have any number of generators.
 
 In this example, a generator `scramble` is defined. This generator then defines a sequence of text including 3 variables (indicated by a word starting with `@`), each pointing to a *container* named `letter`:
 
