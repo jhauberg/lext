@@ -91,6 +91,85 @@ test_escapes(void)
 
 static
 void
+test_newlines_and_whitespace(void)
+{
+    enum lxt_error error;
+    char buffer[64];
+    
+    // should not append blank entry to container
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (entry) empty (   ) sequence <@empty>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "") == 0);
+    
+    // should trim entries
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (      a, a  ,   a  ) sequence <@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "a") == 0);
+
+    // handle newlines
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (\nentry,\nentry,\nentry\n) sequence <@container>",
+                LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "entry") == 0);
+
+    // ...and whitespace
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (\n    entry,\n    entry,\n    entry\n) sequence <@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "entry") == 0);
+
+    error = lxt_gen(buffer, sizeof(buffer),
+                    "container (\n    entry,\n    entry with whitespace,\n    entry\n) sequence <@container>",
+                    LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "entry with whitespace") == 0);
+}
+
+static
+void
+test_quotes(void)
+{
+    enum lxt_error error;
+    char buffer[64];
+
+    // quotes are part of container entries
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (a, \"b\", \"c\") sequence <@container>",
+                LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"b\"") == 0);
+
+    // ...and do not need to be balanced
+    error = lxt_gen(buffer, sizeof(buffer),
+            "container (a, \"b, \"c\") sequence <@container>",
+            LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"b") == 0);
+
+    // quotes are part of sequence text too
+    error = lxt_gen(buffer, sizeof(buffer),
+                "container (a, b, c) sequence <\"text @container\">",
+                LXT_OPTS_NONE);
+    
+    assert(error == LXT_ERROR_NONE);
+    assert(strcmp(buffer, "\"text b\"") == 0);
+}
+
+static
+void
 test_various(void)
 {
     enum lxt_error error;
@@ -159,22 +238,6 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "entry ") == 0);
-    
-    // should not append blank entry to container
-    error = lxt_gen(buffer, sizeof(buffer),
-                    "container (entry) empty (   ) sequence <@empty>",
-                    LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "") == 0);
-    
-    // should trim entries
-    error = lxt_gen(buffer, sizeof(buffer),
-                    "container (      a, a  ,   a  ) sequence <@container>",
-                    LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "a") == 0);
 
     // generator delimiters in entries
     error = lxt_gen(buffer, sizeof(buffer),
@@ -219,38 +282,16 @@ test_various(void)
     
     assert(error == LXT_ERROR_NONE);
     assert(strcmp(buffer, "b") == 0);
-
-    // quotes are part of container entries
-    error = lxt_gen(buffer, sizeof(buffer),
-                "container (a, \"b\", \"c\") sequence <@container>",
-                LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "\"b\"") == 0);
-
-    // ...and do not need to be balanced
-    error = lxt_gen(buffer, sizeof(buffer),
-            "container (a, \"b, \"c\") sequence <@container>",
-            LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "\"b") == 0);
-
-    // quotes are part of sequence text too
-    error = lxt_gen(buffer, sizeof(buffer),
-                "container (a, b, c) sequence <\"text @container\">",
-                LXT_OPTS_NONE);
-    
-    assert(error == LXT_ERROR_NONE);
-    assert(strcmp(buffer, "\"text b\"") == 0);
 }
 
 int32_t
 main(void)
 {
     test_various();
+    test_quotes();
     test_invalid_template();
     test_escapes();
+    test_newlines_and_whitespace();
     test_truncation();
     
     return 0;
